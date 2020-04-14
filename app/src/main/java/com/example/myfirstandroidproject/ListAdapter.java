@@ -76,6 +76,8 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         holder.txtFooter.setText("Footer: " + name);
     }
 
+
+
     // Return the size of your dataset (invoked by the layout manager)
     @Override
     public int getItemCount() {
