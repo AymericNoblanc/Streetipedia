@@ -1,17 +1,34 @@
 package com.example.myfirstandroidproject;
 
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.Icon;
+import android.os.Build;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.jsoup.Jsoup;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.List;
+
+import javax.net.ssl.HttpsURLConnection;
+
+import static android.content.ContentValues.TAG;
 
 public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
     private List<Result> values;
@@ -24,6 +41,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         // each data item is just a string in this case
         TextView txtHeader;
         TextView txtFooter;
+        ImageView Image;
         View layout;
 
         ViewHolder(View v) {
@@ -31,6 +49,8 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
             layout = v;
             txtHeader = (TextView) v.findViewById(R.id.firstLine);
             txtFooter = (TextView) v.findViewById(R.id.secondLine);
+            Image = (ImageView) v.findViewById(R.id.icon);
+
         }
     }
 
@@ -79,6 +99,11 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
 
         String text = Jsoup.parse(name.getSnippet()).text();
         holder.txtFooter.setText(text);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            holder.Image.setImageBitmap(getIconById(name.getPageid()));
+        }
+
         /*holder.layout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -99,6 +124,33 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
     @Override
     public int getItemCount() {
         return values.size();
+    }
+
+
+    private Bitmap getIconById(Integer id){
+
+        //Bitmap icon = null;
+
+        try{
+            URL url = new URL("https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/JulesVallèsCourbetCarnavalet.jpg/43px-JulesVallèsCourbetCarnavalet.jpg");
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            InputStream input = connection.getInputStream();
+            Bitmap icon = BitmapFactory.decodeStream(input);
+            return icon;
+        }catch (IOException e){
+            return null;
+        }
+
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            //icon.createWithFilePath("https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/JulesVallèsCourbetCarnavalet.jpg/43px-JulesVallèsCourbetCarnavalet.jpg");
+            icon.createWithFilePath("mipmap-hdpi/ic_launcher_round.png");
+            Log.d(TAG, "It's Work");
+            icon.
+        }*/
+
+        //return icon;
     }
 
 }

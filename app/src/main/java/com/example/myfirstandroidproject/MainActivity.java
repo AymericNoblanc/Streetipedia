@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.os.Bundle;
+import android.view.View;
 import android.widget.SearchView;
 import android.widget.Toast;
 
@@ -55,11 +56,21 @@ public class MainActivity extends AppCompatActivity {
                 android.R.color.holo_red_light);
 
         searchBar = (SearchView) findViewById(R.id.searchView);
+        searchBar.setSubmitButtonEnabled(true);
+        searchBar.setQuery("",false);
+
+        searchBar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                searchBar.setIconified(false);
+            }
+        });
 
         searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 makeAPICall(query);
+                searchBar.setIconified(true);
                 return false;
             }
 
