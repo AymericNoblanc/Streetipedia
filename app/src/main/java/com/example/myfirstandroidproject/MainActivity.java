@@ -25,19 +25,17 @@ public class MainActivity extends AppCompatActivity {
     private ListAdapter mAdapter;
     private RecyclerView.LayoutManager layoutManager;
 
-    private static final String BASE_URL = "https://fr.wikipedia.org/w/";
-
+    private static final String BASE_URL = "https://en.wikipedia.org/w/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        showList();
         makeAPICall();
     }
 
-    private void showList() {
+    private void showList(Results results) {
 
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         recyclerView.setHasFixedSize(true);
@@ -45,26 +43,28 @@ public class MainActivity extends AppCompatActivity {
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
 
-        List<String> input = new ArrayList<>();
-        for (int i = 0; i < 100; i++) {
-            input.add("Test" + i);
-        }
+       /* List<String> input = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            //input.add("Test" + i);
+            input.add(results.getSearch().get(1).getPageid().toString());
+        }*/
 
         // define an adapter
-        mAdapter = new ListAdapter(input);
+        mAdapter = new ListAdapter(results.getSearch());
         recyclerView.setAdapter(mAdapter);
 
     }
 
-    private void makeAPICall(){
+    public void makeAPICall(){
 
         Call<RestWikipediaResponse> call = callRestApiWikipedia("Nelson Mandela");
         call.enqueue(new Callback<RestWikipediaResponse>() {
             @Override
             public void onResponse(Call<RestWikipediaResponse> call, Response<RestWikipediaResponse> response) {
                 if(response.isSuccessful() && response.body() != null){
-                    Results resultsList = response.body().getQuery();
-                    Toast.makeText(getApplicationContext(), resultsList.getSearch().get(1).getSnippet()/*"API Success"*/, Toast.LENGTH_SHORT).show();
+                    Results results = response.body().getQuery();
+                    showList(results);
+                    //Toast.makeText(getApplicationContext(), "API Success", Toast.LENGTH_SHORT).show();
                 }else{
                     showError();
                 }
@@ -95,6 +95,6 @@ public class MainActivity extends AppCompatActivity {
 
         WikipediaApi WikipediaApi = retrofit.create(WikipediaApi.class);
 
-        return WikipediaApi.getWikipediaResponse("query","search",search, "","json");
+        return WikipediaApi.getWikipediaResponse("query","25", "snippet","search",search, "","json");
     }
 }
