@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.os.Bundle;
+import android.widget.SearchView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
@@ -26,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
     private ListAdapter mAdapter;
     private RecyclerView.LayoutManager layoutManager;
     private SwipeRefreshLayout swipeContainer;
+    private SearchView searchBar;
     private Integer nbRefresh = 0;
 
     private static final String BASE_URL = "https://en.wikipedia.org/w/";
@@ -35,17 +37,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        makeAPICall();
+        makeAPICall("Nelson Mandela");
       
-              // Lookup the swipe container view
+        // Lookup the swipe container view
         swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
         // Setup refresh listener which triggers new data loading
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                // Your code to refresh the list here.
-                // Make sure you call swipeContainer.setRefreshing(false)
-                // once the network request has completed successfully.
                 refresh();
             }
         });
@@ -54,6 +53,21 @@ public class MainActivity extends AppCompatActivity {
                 android.R.color.holo_green_light,
                 android.R.color.holo_orange_light,
                 android.R.color.holo_red_light);
+
+        searchBar = (SearchView) findViewById(R.id.searchView);
+
+        searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                makeAPICall(query);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
     
     }
 
@@ -78,9 +92,9 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void makeAPICall(){
+    public void makeAPICall(String search){
 
-        Call<RestWikipediaResponse> call = callRestApiWikipedia("Nelson Mandela");
+        Call<RestWikipediaResponse> call = callRestApiWikipedia(search);
         call.enqueue(new Callback<RestWikipediaResponse>() {
             @Override
             public void onResponse(Call<RestWikipediaResponse> call, Response<RestWikipediaResponse> response) {
@@ -124,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void refresh() {
 
-        List<Result> input = new ArrayList<>();
+        /*List<Result> input = new ArrayList<>();
 
         mAdapter = new ListAdapter(input);
         recyclerView.setAdapter(mAdapter);
@@ -139,8 +153,8 @@ public class MainActivity extends AppCompatActivity {
         mAdapter = new ListAdapter(input);
         recyclerView.setAdapter(mAdapter);
         // Now we call setRefreshing(false) to signal refresh has finished
+        swipeContainer.setRefreshing(false);*/
+        makeAPICall("Nelson Mandela");
         swipeContainer.setRefreshing(false);
-
-
     }
 }
