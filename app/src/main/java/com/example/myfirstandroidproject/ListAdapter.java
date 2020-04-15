@@ -1,6 +1,7 @@
 package com.example.myfirstandroidproject;
 
 
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +13,7 @@ import java.util.List;
 
 public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
     private List<String> values;
+    private int row_index = -1;
 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
@@ -66,14 +68,26 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         // - replace the contents of the view with that element
         final String name = values.get(position);
         holder.txtHeader.setText(name);
-        holder.txtHeader.setOnClickListener(new View.OnClickListener() {
+        /*holder.txtHeader.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 remove(position);
             }
-        });
+        });*/
 
         holder.txtFooter.setText("Footer: " + name);
+        /*holder.layout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                row_index = position;
+                notifyDataSetChanged();
+            }
+        });
+        if(row_index==position){
+            holder.layout.setBackgroundColor(Color.parseColor("#E82222"));
+        }else{
+            holder.layout.setBackgroundColor(Color.parseColor("#F9F9F9"));
+        }*/
     }
 
     // Return the size of your dataset (invoked by the layout manager)
