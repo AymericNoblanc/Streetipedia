@@ -105,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, "API Error", Toast.LENGTH_SHORT).show();
     }
 
-    private Call<RestWikipediaResponse> callRestApiWikipedia(String search){
+    private Call<RestWikipediaResponse> callRestApiWikipedia(String search) {
 
         Gson gson = new GsonBuilder()
                 .setLenient()
@@ -118,13 +118,13 @@ public class MainActivity extends AppCompatActivity {
 
         WikipediaApi WikipediaApi = retrofit.create(WikipediaApi.class);
 
-        return WikipediaApi.getWikipediaResponse("query","25", "snippet","search",search, "","json");
+        return WikipediaApi.getWikipediaResponse("query", "25", "snippet", "search", search, "", "json");
 
-
+    }
 
     public void refresh() {
 
-        List<String> input = new ArrayList<>();
+        List<Result> input = new ArrayList<>();
 
         mAdapter = new ListAdapter(input);
         recyclerView.setAdapter(mAdapter);
@@ -132,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
         nbRefresh++;
 
         for (int i = 0; i < 100; i++) {
-            input.add("Test " + nbRefresh + " : " + i);
+            //input.add("Test " + nbRefresh + " : " + i);
         }
 
         // define an adapter
