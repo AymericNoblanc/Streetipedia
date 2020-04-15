@@ -33,6 +33,11 @@ dependencies {
 
     implementation "androidx.recyclerview:recyclerview:1.1.0"
 
+    implementation 'com.squareup.retrofit2:retrofit:2.6.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.6.0'
+
+    implementation 'org.jsoup:jsoup:1.7.2'
+
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.0.0'
 
 
