@@ -5,6 +5,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.SearchView;
@@ -22,13 +23,14 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ListAdapter.SelectedPage {
 
     private RecyclerView recyclerView;
     private ListAdapter mAdapter;
     private RecyclerView.LayoutManager layoutManager;
     private SwipeRefreshLayout swipeContainer;
     private SearchView searchBar;
+    Results results;
     private Integer nbRefresh = 0;
 
     private static final String BASE_URL = "https://en.wikipedia.org/w/";
@@ -97,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
         }*/
 
         // define an adapter
-        mAdapter = new ListAdapter(results.getSearch());
+        mAdapter = new ListAdapter(results.getSearch(), this);
         recyclerView.setAdapter(mAdapter);
 
 
@@ -110,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<RestWikipediaResponse> call, Response<RestWikipediaResponse> response) {
                 if(response.isSuccessful() && response.body() != null){
-                    Results results = response.body().getQuery();
+                    results = response.body().getQuery();
                     showList(results);
                     //Toast.makeText(getApplicationContext(), "API Success", Toast.LENGTH_SHORT).show();
                 }else{
@@ -167,5 +169,12 @@ public class MainActivity extends AppCompatActivity {
         swipeContainer.setRefreshing(false);*/
         makeAPICall("Nelson Mandela");
         swipeContainer.setRefreshing(false);
+    }
+
+    @Override
+    public void selectedPage(Result result) {
+
+        startActivity(new Intent(MainActivity.this, SelectedPageActivity.class).putExtra("data", result));
+
     }
 }

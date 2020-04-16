@@ -34,6 +34,8 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
     private List<Result> values;
     private int row_index = -1;
 
+    private SelectedPage selectedPage;
+
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
     // you provide access to all the views for a data item in a view holder
@@ -51,6 +53,13 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
             txtFooter = (TextView) v.findViewById(R.id.secondLine);
             Image = (ImageView) v.findViewById(R.id.icon);
 
+            v.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    selectedPage.selectedPage(values.get(getAdapterPosition()));
+                }
+            });
+
         }
     }
 
@@ -65,8 +74,9 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public ListAdapter(List<Result> myDataset) {
+    public ListAdapter(List<Result> myDataset, SelectedPage selectedPage) {
         values = myDataset;
+        this.selectedPage = selectedPage;
     }
 
     // Create new views (invoked by the layout manager)
@@ -90,6 +100,10 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         // - replace the contents of the view with that element
         final Result name = values.get(position);
         holder.txtHeader.setText(name.getTitle());
+        if(position==0){
+           // holder.layout.setBackgroundColor(Color.parseColor("#EFE395"));
+            holder.layout.setBackgroundResource(R.color.firstResultColor);
+        }
         /*holder.txtHeader.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -101,10 +115,10 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         holder.txtFooter.setText(text);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            holder.Image.setImageBitmap(getIconById(name.getPageid()));
+            //holder.Image.setImageBitmap(getIconById(name.getPageid()));
         }
 
-        /*holder.layout.setOnClickListener(new View.OnClickListener() {
+       /* holder.layout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 row_index = position;
@@ -114,7 +128,11 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         if(row_index==position){
             holder.layout.setBackgroundColor(Color.parseColor("#E82222"));
         }else{
-            holder.layout.setBackgroundColor(Color.parseColor("#F9F9F9"));
+            if(position==0){
+                holder.layout.setBackgroundResource(R.color.firstResultColor);
+            }else{
+                holder.layout.setBackgroundColor(Color.parseColor("#F9F9F9"));
+            }
         }*/
     }
 
@@ -151,6 +169,10 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         }*/
 
         //return icon;
+    }
+
+    public interface SelectedPage{
+        void selectedPage (Result result);
     }
 
 }
