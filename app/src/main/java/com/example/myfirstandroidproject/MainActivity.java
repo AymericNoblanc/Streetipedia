@@ -14,9 +14,6 @@ import android.widget.Toast;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -30,7 +27,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
     private RecyclerView.LayoutManager layoutManager;
     private SwipeRefreshLayout swipeContainer;
     private SearchView searchBar;
-    Results results;
+    ResultsWikiSearch results;
     private Integer nbRefresh = 0;
 
     private static final String BASE_URL = "https://en.wikipedia.org/w/";
@@ -84,7 +81,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
     
     }
 
-    private void showList(Results results) {
+    private void showList(ResultsWikiSearch results) {
 
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         recyclerView.setHasFixedSize(true);
@@ -107,10 +104,10 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
     public void makeAPICall(String search){
 
-        Call<RestWikipediaResponse> call = callRestApiWikipedia(search);
-        call.enqueue(new Callback<RestWikipediaResponse>() {
+        Call<RestWikipediaResponseSearch> call = callRestApiWikipedia(search);
+        call.enqueue(new Callback<RestWikipediaResponseSearch>() {
             @Override
-            public void onResponse(Call<RestWikipediaResponse> call, Response<RestWikipediaResponse> response) {
+            public void onResponse(Call<RestWikipediaResponseSearch> call, Response<RestWikipediaResponseSearch> response) {
                 if(response.isSuccessful() && response.body() != null){
                     results = response.body().getQuery();
                     showList(results);
@@ -121,7 +118,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
             }
 
             @Override
-            public void onFailure(Call<RestWikipediaResponse> call, Throwable t) {
+            public void onFailure(Call<RestWikipediaResponseSearch> call, Throwable t) {
                 showError();
             }
         });
@@ -132,7 +129,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
         Toast.makeText(this, "API Error", Toast.LENGTH_SHORT).show();
     }
 
-    private Call<RestWikipediaResponse> callRestApiWikipedia(String search) {
+    private Call<RestWikipediaResponseSearch> callRestApiWikipedia(String search) {
 
         Gson gson = new GsonBuilder()
                 .setLenient()
@@ -143,7 +140,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
 
-        WikipediaApi WikipediaApi = retrofit.create(WikipediaApi.class);
+        WikipediaApiSearch WikipediaApi = retrofit.create(WikipediaApiSearch.class);
 
         return WikipediaApi.getWikipediaResponse("query", "25", "snippet", "search", search, "", "json");
 
@@ -172,7 +169,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
     }
 
     @Override
-    public void selectedPage(Result result) {
+    public void selectedPage(ResultWikiSearch result) {
 
         startActivity(new Intent(MainActivity.this, SelectedPageActivity.class).putExtra("data", result));
 

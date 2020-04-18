@@ -2,7 +2,7 @@ package com.example.myfirstandroidproject;
 
 import java.io.Serializable;
 
-public class Result implements Serializable {
+public class ResultWikiSearch implements Serializable {
 
     private String title;
     private Integer pageid;
