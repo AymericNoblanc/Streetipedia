@@ -4,7 +4,11 @@ public class RestWikipediaResponseSearch {
 
     private ResultsWikiSearch query;
 
-    public ResultsWikiSearch getQuery() {
+    public RestWikipediaResponseSearch(ResultsWikiSearch query) {
+        this.query = query;
+    }
+
+    ResultsWikiSearch getQuery() {
         return query;
     }
 }
