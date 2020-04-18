@@ -8,15 +8,21 @@ public class ResultWikiSearch implements Serializable {
     private Integer pageid;
     private String snippet;
 
-    public String getTitle() {
+    public ResultWikiSearch(String title, Integer pageid, String snippet) {
+        this.title = title;
+        this.pageid = pageid;
+        this.snippet = snippet;
+    }
+
+    String getTitle() {
         return title;
     }
 
-    public Integer getPageid() {
+    Integer getPageid() {
         return pageid;
     }
 
-    public String getSnippet() {
+    String getSnippet() {
         return snippet;
     }
 }

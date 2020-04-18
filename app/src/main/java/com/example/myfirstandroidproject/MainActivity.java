@@ -1,5 +1,6 @@
 package com.example.myfirstandroidproject;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -22,13 +23,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity implements ListAdapter.SelectedPage {
 
-    private RecyclerView recyclerView;
-    private ListAdapter mAdapter;
-    private RecyclerView.LayoutManager layoutManager;
     private SwipeRefreshLayout swipeContainer;
     private SearchView searchBar;
     ResultsWikiSearch results;
-    private Integer nbRefresh = 0;
 
     private static final String BASE_URL = "https://en.wikipedia.org/w/";
 
@@ -40,7 +37,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
         makeAPICall("Nelson Mandela");
       
         // Lookup the swipe container view
-        swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
+        swipeContainer = findViewById(R.id.swipeContainer);
         // Setup refresh listener which triggers new data loading
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -54,7 +51,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
                 android.R.color.holo_orange_light,
                 android.R.color.holo_red_light);
 
-        searchBar = (SearchView) findViewById(R.id.searchView);
+        searchBar = findViewById(R.id.searchView);
         searchBar.setSubmitButtonEnabled(true);
         searchBar.setQuery("",false);
 
@@ -72,7 +69,6 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
                 searchBar.setIconified(true);
                 return false;
             }
-
             @Override
             public boolean onQueryTextChange(String newText) {
                 return false;
@@ -83,20 +79,14 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
     private void showList(ResultsWikiSearch results) {
 
-        recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        RecyclerView recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setHasFixedSize(true);
         // use a linear layout manager
-        layoutManager = new LinearLayoutManager(this);
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
 
-       /* List<String> input = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
-            //input.add("Test" + i);
-            input.add(results.getSearch().get(1).getPageid().toString());
-        }*/
-
         // define an adapter
-        mAdapter = new ListAdapter(results.getSearch(), this);
+        ListAdapter mAdapter = new ListAdapter(results.getSearch(), this);
         recyclerView.setAdapter(mAdapter);
 
 
@@ -107,7 +97,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
         Call<RestWikipediaResponseSearch> call = callRestApiWikipedia(search);
         call.enqueue(new Callback<RestWikipediaResponseSearch>() {
             @Override
-            public void onResponse(Call<RestWikipediaResponseSearch> call, Response<RestWikipediaResponseSearch> response) {
+            public void onResponse(@NonNull Call<RestWikipediaResponseSearch> call, @NonNull Response<RestWikipediaResponseSearch> response) {
                 if(response.isSuccessful() && response.body() != null){
                     results = response.body().getQuery();
                     showList(results);
@@ -116,9 +106,8 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
                     showError();
                 }
             }
-
             @Override
-            public void onFailure(Call<RestWikipediaResponseSearch> call, Throwable t) {
+            public void onFailure(@NonNull Call<RestWikipediaResponseSearch> call, @NonNull Throwable t) {
                 showError();
             }
         });
@@ -147,31 +136,12 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
     }
 
     public void refresh() {
-
-        /*List<Result> input = new ArrayList<>();
-
-        mAdapter = new ListAdapter(input);
-        recyclerView.setAdapter(mAdapter);
-
-        nbRefresh++;
-
-        for (int i = 0; i < 100; i++) {
-            //input.add("Test " + nbRefresh + " : " + i);
-        }
-
-        // define an adapter
-        mAdapter = new ListAdapter(input);
-        recyclerView.setAdapter(mAdapter);
-        // Now we call setRefreshing(false) to signal refresh has finished
-        swipeContainer.setRefreshing(false);*/
         makeAPICall("Nelson Mandela");
         swipeContainer.setRefreshing(false);
     }
 
     @Override
     public void selectedPage(ResultWikiSearch result) {
-
         startActivity(new Intent(MainActivity.this, SelectedPageActivity.class).putExtra("data", result));
-
     }
 }
