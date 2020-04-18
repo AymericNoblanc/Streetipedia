@@ -1,6 +1,8 @@
 package com.example.myfirstandroidproject;
 
-public class Result {
+import java.io.Serializable;
+
+public class ResultWikiSearch implements Serializable {
 
     private String title;
     private Integer pageid;

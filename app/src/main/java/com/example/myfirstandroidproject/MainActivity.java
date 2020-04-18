@@ -5,14 +5,14 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.SearchView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -20,12 +20,14 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ListAdapter.SelectedPage {
 
     private RecyclerView recyclerView;
     private ListAdapter mAdapter;
     private RecyclerView.LayoutManager layoutManager;
     private SwipeRefreshLayout swipeContainer;
+    private SearchView searchBar;
+    ResultsWikiSearch results;
     private Integer nbRefresh = 0;
 
     private static final String BASE_URL = "https://en.wikipedia.org/w/";
@@ -35,17 +37,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        makeAPICall();
+        makeAPICall("Nelson Mandela");
       
-              // Lookup the swipe container view
+        // Lookup the swipe container view
         swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
         // Setup refresh listener which triggers new data loading
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                // Your code to refresh the list here.
-                // Make sure you call swipeContainer.setRefreshing(false)
-                // once the network request has completed successfully.
                 refresh();
             }
         });
@@ -54,10 +53,35 @@ public class MainActivity extends AppCompatActivity {
                 android.R.color.holo_green_light,
                 android.R.color.holo_orange_light,
                 android.R.color.holo_red_light);
+
+        searchBar = (SearchView) findViewById(R.id.searchView);
+        searchBar.setSubmitButtonEnabled(true);
+        searchBar.setQuery("",false);
+
+        searchBar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                searchBar.setIconified(false);
+            }
+        });
+
+        searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                makeAPICall(query);
+                searchBar.setIconified(true);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
     
     }
 
-    private void showList(Results results) {
+    private void showList(ResultsWikiSearch results) {
 
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         recyclerView.setHasFixedSize(true);
@@ -72,20 +96,20 @@ public class MainActivity extends AppCompatActivity {
         }*/
 
         // define an adapter
-        mAdapter = new ListAdapter(results.getSearch());
+        mAdapter = new ListAdapter(results.getSearch(), this);
         recyclerView.setAdapter(mAdapter);
 
 
     }
 
-    public void makeAPICall(){
+    public void makeAPICall(String search){
 
-        Call<RestWikipediaResponse> call = callRestApiWikipedia("Nelson Mandela");
-        call.enqueue(new Callback<RestWikipediaResponse>() {
+        Call<RestWikipediaResponseSearch> call = callRestApiWikipedia(search);
+        call.enqueue(new Callback<RestWikipediaResponseSearch>() {
             @Override
-            public void onResponse(Call<RestWikipediaResponse> call, Response<RestWikipediaResponse> response) {
+            public void onResponse(Call<RestWikipediaResponseSearch> call, Response<RestWikipediaResponseSearch> response) {
                 if(response.isSuccessful() && response.body() != null){
-                    Results results = response.body().getQuery();
+                    results = response.body().getQuery();
                     showList(results);
                     //Toast.makeText(getApplicationContext(), "API Success", Toast.LENGTH_SHORT).show();
                 }else{
@@ -94,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<RestWikipediaResponse> call, Throwable t) {
+            public void onFailure(Call<RestWikipediaResponseSearch> call, Throwable t) {
                 showError();
             }
         });
@@ -105,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, "API Error", Toast.LENGTH_SHORT).show();
     }
 
-    private Call<RestWikipediaResponse> callRestApiWikipedia(String search) {
+    private Call<RestWikipediaResponseSearch> callRestApiWikipedia(String search) {
 
         Gson gson = new GsonBuilder()
                 .setLenient()
@@ -116,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
 
-        WikipediaApi WikipediaApi = retrofit.create(WikipediaApi.class);
+        WikipediaApiSearch WikipediaApi = retrofit.create(WikipediaApiSearch.class);
 
         return WikipediaApi.getWikipediaResponse("query", "25", "snippet", "search", search, "", "json");
 
@@ -124,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void refresh() {
 
-        List<Result> input = new ArrayList<>();
+        /*List<Result> input = new ArrayList<>();
 
         mAdapter = new ListAdapter(input);
         recyclerView.setAdapter(mAdapter);
@@ -139,8 +163,15 @@ public class MainActivity extends AppCompatActivity {
         mAdapter = new ListAdapter(input);
         recyclerView.setAdapter(mAdapter);
         // Now we call setRefreshing(false) to signal refresh has finished
+        swipeContainer.setRefreshing(false);*/
+        makeAPICall("Nelson Mandela");
         swipeContainer.setRefreshing(false);
+    }
 
+    @Override
+    public void selectedPage(ResultWikiSearch result) {
+
+        startActivity(new Intent(MainActivity.this, SelectedPageActivity.class).putExtra("data", result));
 
     }
 }
