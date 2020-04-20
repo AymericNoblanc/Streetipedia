@@ -1,8 +1,8 @@
 package com.example.myfirstandroidproject;
 
-import android.widget.ImageView;
+import java.io.Serializable;
 
-public class Rue {
+public class Rue implements Serializable {
 
     private String nomRue;
     private String titre;
