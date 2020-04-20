@@ -7,11 +7,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.text.Layout;
-import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.SearchView;
 import android.widget.Toast;
@@ -20,15 +17,16 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 public class MainActivity extends AppCompatActivity implements ListAdapter.SelectedPage {
 
@@ -37,7 +35,10 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
     ResultsWikiSearch results;
     ResultsWikiInfo resultsInfo;
 
-    Rue[] infoRues = new Rue[3];
+    String url = null;
+    String url2 = null;
+
+    List<Rue> infoRues = new ArrayList<>();
 
     private List<String> listTypeVoie = Arrays.asList("Allée ", "Avenue ", "Av. ", "Boulevard ", "Carrefour ", "Chemin ", "Chaussée ", "Cité ", "Corniche ", "Cours ", "Domaine ",
             "Descente ", "Ecart ", "Esplanade ", "Faubourg ", "Grande Rue ", "Hameau ", "Halle ", "Impasse ", "Lieu-dit ", "Lottissement ", "Marché ", "Montée ", "Passage ","Passerelle ",
@@ -46,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
     private String titre;
 
     private static final String BASE_URL = "https://en.wikipedia.org/w/";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,11 +102,14 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
             makeAPICallInfo2(Integer.toString(newRue.getPageId()));
             newRue.setDescription(resultsInfo.getPages().get(0).getExtract());
 
-            infoRues[i]= newRue;
+            makeAPICallImage2(Integer.toString(newRue.getPageId()));
+            newRue.setThumbnail(url);
+            newRue.setImage(url2);
+
+            infoRues.add(newRue);
 
             //Toast.makeText(this, newRue.getTitre(), Toast.LENGTH_SHORT).show();
 
-            //infoRues.add(newRue);
         }
 
         makeAPICallSearch("Nelson Mandela");
@@ -264,6 +269,79 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
         return wikipediaApi2.getWikipediaResponse2("query", "extracts", "1", search, "1", "2", "json");
 
+    }
+
+    public void makeAPICallImage2(String search){
+
+        Call<String> call = callRestApiWikipediaImage(search);
+        try{
+            url = call.execute().body();
+            if(url.contains("https://upload.wikimedia.org")) {
+                url = url.substring(url.indexOf("https://upload.wikimedia.org"));
+                url = url.substring(0,url.indexOf("\""));
+                url2 = url;
+                if(!(url2.contains("svg"))){
+                    url2 = url2.replace("/thumb", "");
+                    url2 = url2.substring(0, url.indexOf(".jpg")-6);
+                    url2 = url2.concat(".jpg");
+                }
+            }else{
+                url=null;
+                url2=null;
+            }
+        }catch(IOException e){
+            Toast.makeText(this, "error", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+   /* public void makeAPICallImage(String search){
+
+        Call<String> call = callRestApiWikipediaImage(search);
+        call.enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
+                if(response.isSuccessful() && response.body() != null){
+                    url = response.body();
+                    if(url.contains("https://upload.wikimedia.org")) {
+                        url = url.substring(url.indexOf("https://upload.wikimedia.org"));
+                        if(url.contains("svg")){
+                            url = url.substring(0,url.indexOf(".png"));
+                            url = url.concat(".png");
+                        }else {
+                            url = url.replace("/thumb", "");
+                            url = url.substring(0, url.indexOf(".jpg"));
+                            url = url.concat(".jpg");
+                        }
+                    }else{
+                        picture.setImageResource(R.drawable.ic_visibility_off_black_24dp);
+                    }
+                }else{
+                    showError();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
+                showError();
+            }
+        });
+    }*/
+
+    private Call<String> callRestApiWikipediaImage(String search) {
+
+        Gson gson = new GsonBuilder()
+                .setLenient()
+                .create();
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build();
+
+        WikipediaApiImage WikipediaApi = retrofit.create(WikipediaApiImage.class);
+
+        return WikipediaApi.getWikipediaResponseImage("query", search, "json", "pageimages");
     }
 
     public void refresh() {

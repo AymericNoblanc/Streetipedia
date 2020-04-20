@@ -9,8 +9,8 @@ public class Rue {
     private Integer pageId;
     private String snippet;
     private String description;
-    private ImageView thumbnail;
-    private ImageView image;
+    private String thumbnail;
+    private String image;
 
     /*public Rue(String nomRue, String titre, Integer pageId, String snippet, String description, ImageView thumbnail, ImageView image) {
         this.nomRue = nomRue;
@@ -66,19 +66,19 @@ public class Rue {
         this.description = description;
     }
 
-    ImageView getThumbnail() {
+    String getThumbnail() {
         return thumbnail;
     }
 
-    void setThumbnail(ImageView thumbnail) {
+    void setThumbnail(String thumbnail) {
         this.thumbnail = thumbnail;
     }
 
-    ImageView getImage() {
+    String getImage() {
         return image;
     }
 
-    void setImage(ImageView image) {
+    void setImage(String image) {
         this.image = image;
     }
 }
