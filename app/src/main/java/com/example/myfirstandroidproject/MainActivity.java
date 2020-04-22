@@ -36,7 +36,12 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
     String url = null;
     String url2 = null;
 
+    String test = null;
+
     List<Rue> infoRues = new ArrayList<>();
+
+
+    private List<String> nomsRue;
 
     private List<String> listTypeVoie = Arrays.asList("Allée ", "Avenue ", "Av. ", "Boulevard ", "Carrefour ", "Chemin ", "Chaussée ", "Cité ", "Corniche ", "Cours ", "Domaine ",
             "Descente ", "Ecart ", "Esplanade ", "Faubourg ", "Grande Rue ", "Hameau ", "Halle ", "Impasse ", "Lieu-dit ", "Lottissement ", "Marché ", "Montée ", "Passage ","Passerelle ",
@@ -45,6 +50,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
     private String titre;
 
     private static final String BASE_URL = "https://fr.wikipedia.org/w/";
+    private static final String BASE_BING_URL = "http://dev.virtualearth.net/REST/v1/Locations/";
 
 
     @Override
@@ -57,7 +63,9 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        List<String> nomsRue = Arrays.asList("Rue Jules Vallès", "Avenue du Général De Gaule", "Rue de l'Orme"); //API Bing
+        nomsRue = Arrays.asList("Rue Jules Vallès", "Avenue du Général De Gaule", "Rue de l'Orme"); //API Bing
+
+        makeBingAPICall("http://dev.virtualearth.net/REST/v1/Locations/48.75777,2.68895?o=json&incl=ciso2&key=AsKDhGrY05ocf_6ajFmtLjPfnPI1MxXFALXyVw9kRNrsDlSmEygCllcwizQbnUuS");
 
         createListRue(nomsRue);
 
@@ -210,6 +218,47 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
         WikipediaApiImage WikipediaApi = retrofit.create(WikipediaApiImage.class);
 
         return WikipediaApi.getWikipediaResponseImage("query", search, "json", "pageimages");
+    }
+
+    public void makeBingAPICall(String bingUrl){
+
+        Call<String> call = callBingApi(bingUrl);
+        try{
+            test = call.execute().body();
+            test = test.substring(test.indexOf("baseStreet"));
+            test = test.substring(0, test.indexOf("intersectionType")-3);
+
+            String[] rue = test.split(",");
+
+            for(int i=0;i<rue.length;i++){
+                rue[i] = rue[i].substring(rue[i].indexOf(":")+1);
+                rue[i] = rue[i].replace("\"","");
+                //nomsRue.add(rue[i]);
+            }
+
+            nomsRue = Arrays.asList(rue);
+
+            //Toast.makeText(this, "error", Toast.LENGTH_SHORT).show();
+        }catch(IOException e){
+            Toast.makeText(this, "error", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private Call<String> callBingApi(String bingUrl) {
+
+        Gson gson = new GsonBuilder()
+                .setLenient()
+                .create();
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_BING_URL)
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build();
+
+        BingMapsApi bingApi = retrofit.create(BingMapsApi.class);
+
+        return bingApi.getBingMapsResponse(bingUrl);
     }
 
     public void refresh() {
