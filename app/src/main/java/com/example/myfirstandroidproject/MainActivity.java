@@ -1,13 +1,21 @@
 package com.example.myfirstandroidproject;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.util.Log;
 import android.view.View;
 import android.widget.SearchView;
 import android.widget.Toast;
@@ -16,7 +24,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,7 +33,18 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
 
-public class MainActivity extends AppCompatActivity implements ListAdapter.SelectedPage {
+public class MainActivity extends AppCompatActivity implements ListAdapter.SelectedPage, LocationListener {
+
+    protected LocationManager locationManager;
+    protected LocationListener locationListener;
+    protected Context context;
+    String lat;
+    String provider;
+    String latitude, longitude;
+    protected boolean gps_enabled, network_enabled;
+    String [] coordinate;
+
+    boolean getGPSlocation;
 
     private SwipeRefreshLayout swipeContainer;
     private SearchView searchBar;
@@ -44,7 +62,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
     private List<String> nomsRue;
 
     private List<String> listTypeVoie = Arrays.asList("Allée ", "Avenue ", "Av. ", "Boulevard ", "Carrefour ", "Chemin ", "Chaussée ", "Cité ", "Corniche ", "Cours ", "Domaine ",
-            "Descente ", "Ecart ", "Esplanade ", "Faubourg ", "Grande Rue ", "Hameau ", "Halle ", "Impasse ", "Lieu-dit ", "Lottissement ", "Marché ", "Montée ", "Passage ","Passerelle ",
+            "Descente ", "Ecart ", "Esplanade ", "Faubourg ", "Grande Rue ", "Hameau ", "Halle ", "Impasse ", "Lieu-dit ", "Lottissement ", "Marché ", "Montée ", "Passage ", "Passerelle ",
             "Place ", "Plaine ", "Plateau ", "Promenade ", "Parvis ", "Quartier ", "Quai ", "Résidence ", "Ruelle ", "Rocade ", "Rond-Point ", "Route ", "Rue ", "Sentier ",
             "Square ", "Terre-Plein ", "Terrasse ", "Traverse ", "Villa ", "Village ");
     private String titre;
@@ -63,13 +81,30 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        getGPSlocation = false;
+
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+
+        /*Log.d("----------------------",txtLat);
+
         nomsRue = Arrays.asList("Rue Jules Vallès", "Avenue du Général De Gaule", "Rue de l'Orme"); //API Bing
 
         makeBingAPICall("http://dev.virtualearth.net/REST/v1/Locations/48.75777,2.68895?o=json&incl=ciso2&key=AsKDhGrY05ocf_6ajFmtLjPfnPI1MxXFALXyVw9kRNrsDlSmEygCllcwizQbnUuS");
 
         createListRue(nomsRue);
 
-        showList(infoRues);
+        showList(infoRues);*/
 
         // Lookup the swipe container view
         swipeContainer = findViewById(R.id.swipeContainer);
@@ -330,5 +365,48 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
         }
 
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        //txtLat = (TextView) findViewById(R.id.textview1);
+        //txtLat = "Latitude:" + location.getLatitude() + ", Longitude:" + location.getLongitude();
+        locationManager.removeUpdates(this);
+        if(!getGPSlocation){
+            getGPSlocation = true;
+            latitude = Double.toString(location.getLatitude()).substring(0,Double.toString(location.getLatitude()).indexOf(".") + 6);
+            longitude = Double.toString(location.getLongitude()).substring(0,Double.toString(location.getLongitude()).indexOf(".") + 6);
+            coordinate[0] = latitude + "," +  longitude;
+            Log.d("----------------------", coordinate[0]);
+
+            /*for (int i=0; i<10; i++){
+                for(int j=0; j<10; j++){
+                    coordinate[i*10]
+                }
+            }*/
+
+            nomsRue = Arrays.asList("Rue Jules Vallès", "Avenue du Général De Gaule", "Rue de l'Orme"); //API Bing
+
+            makeBingAPICall("http://dev.virtualearth.net/REST/v1/Locations/48.75777,2.68895?o=json&incl=ciso2&key=AsKDhGrY05ocf_6ajFmtLjPfnPI1MxXFALXyVw9kRNrsDlSmEygCllcwizQbnUuS");
+
+            createListRue(nomsRue);
+
+            showList(infoRues);
+        }
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+        Log.d("Latitude","status");
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+        Log.d("Latitude","enable");
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+        Log.d("Latitude","disable");
     }
 }
