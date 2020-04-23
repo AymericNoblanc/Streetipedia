@@ -1,13 +1,21 @@
 package com.example.myfirstandroidproject;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.util.Log;
 import android.view.View;
 import android.widget.SearchView;
 import android.widget.Toast;
@@ -16,20 +24,32 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
 
-public class MainActivity extends AppCompatActivity implements ListAdapter.SelectedPage {
+public class MainActivity extends AppCompatActivity implements ListAdapter.SelectedPage, LocationListener {
+
+    protected LocationManager locationManager;
+    protected LocationListener locationListener;
+    protected Context context;
+    String lat;
+    String provider;
+    String latitude, longitude;
+    protected boolean gps_enabled, network_enabled;
+    String coordinate;
+
+    boolean getGPSlocation;
 
     private SwipeRefreshLayout swipeContainer;
-    private SearchView searchBar;
     ResultsWikiSearch results;
     ResultsWikiInfo resultsInfo;
 
@@ -40,11 +60,14 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
     List<Rue> infoRues = new ArrayList<>();
 
+    Map<Integer, String> hashNomRue = new HashMap<>();
+    TreeMap<Integer, String> listNomRue = new TreeMap<>(hashNomRue);
+    Integer comptage = 0;
 
     private List<String> nomsRue;
 
     private List<String> listTypeVoie = Arrays.asList("Allée ", "Avenue ", "Av. ", "Boulevard ", "Carrefour ", "Chemin ", "Chaussée ", "Cité ", "Corniche ", "Cours ", "Domaine ",
-            "Descente ", "Ecart ", "Esplanade ", "Faubourg ", "Grande Rue ", "Hameau ", "Halle ", "Impasse ", "Lieu-dit ", "Lottissement ", "Marché ", "Montée ", "Passage ","Passerelle ",
+            "Descente ", "Ecart ", "Esplanade ", "Faubourg ", "Grande Rue ", "Hameau ", "Halle ", "Impasse ", "Lieu-dit ", "Lottissement ", "Marché ", "Montée ", "Passage ", "Passerelle ",
             "Place ", "Plaine ", "Plateau ", "Promenade ", "Parvis ", "Quartier ", "Quai ", "Résidence ", "Ruelle ", "Rocade ", "Rond-Point ", "Route ", "Rue ", "Sentier ",
             "Square ", "Terre-Plein ", "Terrasse ", "Traverse ", "Villa ", "Village ");
     private String titre;
@@ -63,13 +86,30 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        getGPSlocation = false;
+
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+
+        /*Log.d("----------------------",txtLat);
+
         nomsRue = Arrays.asList("Rue Jules Vallès", "Avenue du Général De Gaule", "Rue de l'Orme"); //API Bing
 
         makeBingAPICall("http://dev.virtualearth.net/REST/v1/Locations/48.75777,2.68895?o=json&incl=ciso2&key=AsKDhGrY05ocf_6ajFmtLjPfnPI1MxXFALXyVw9kRNrsDlSmEygCllcwizQbnUuS");
 
         createListRue(nomsRue);
 
-        showList(infoRues);
+        showList(infoRues);*/
 
         // Lookup the swipe container view
         swipeContainer = findViewById(R.id.swipeContainer);
@@ -86,30 +126,6 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
                 android.R.color.holo_orange_light,
                 android.R.color.holo_red_light);
 
-        searchBar = findViewById(R.id.searchView);
-        searchBar.setSubmitButtonEnabled(true);
-        searchBar.setQuery("",false);
-
-        searchBar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                searchBar.setIconified(false);
-            }
-        });
-
-        searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                makeAPICallSearch(query);
-                searchBar.setIconified(true);
-                return false;
-            }
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                return false;
-            }
-        });
-    
     }
 
     private void showList(List<Rue> rueList) {
@@ -123,8 +139,6 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
         // define an adapter
         ListAdapter mAdapter = new ListAdapter(rueList, this);
         recyclerView.setAdapter(mAdapter);
-
-
     }
 
     public void makeAPICallSearch(String search){
@@ -149,7 +163,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
         WikipediaApiSearch WikipediaApi = retrofit.create(WikipediaApiSearch.class);
 
-        return WikipediaApi.getWikipediaResponse("query", "25", "classic","snippet", "search", search, "", "json");
+        return WikipediaApi.getWikipediaResponse("query", "1", "classic","snippet", "search", search, "", "json");
 
     }
 
@@ -190,9 +204,15 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
                 url = url.substring(0,url.indexOf("\""));
                 url2 = url;
                 if(!(url2.contains("svg"))){
-                    url2 = url2.replace("/thumb", "");
-                    url2 = url2.substring(0, url.indexOf(".jpg")-6);
-                    url2 = url2.concat(".jpg");
+                    if(url2.contains("jpg")){
+                        url2 = url2.replace("/thumb", "");
+                        url2 = url2.substring(0, url.indexOf(".jpg")-6);
+                        url2 = url2.concat(".jpg");
+                    }else if(url2.contains("png")){
+                        url2 = url2.replace("/thumb", "");
+                        url2 = url2.substring(0, url.indexOf(".png")-6);
+                        url2 = url2.concat(".png");
+                    }
                 }
             }else{
                 url=null;
@@ -220,23 +240,46 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
         return WikipediaApi.getWikipediaResponseImage("query", search, "json", "pageimages");
     }
 
-    public void makeBingAPICall(String bingUrl){
+    public void makeBingAPICall(String latitudeVar, String longitudeVar, Integer weight){
 
-        Call<String> call = callBingApi(bingUrl);
+        Call<String> call = callBingApi("http://dev.virtualearth.net/REST/v1/Locations/" + latitudeVar + "," +  longitudeVar + "?o=json&incl=ciso2&key=AsKDhGrY05ocf_6ajFmtLjPfnPI1MxXFALXyVw9kRNrsDlSmEygCllcwizQbnUuS");
         try{
             test = call.execute().body();
-            test = test.substring(test.indexOf("baseStreet"));
-            test = test.substring(0, test.indexOf("intersectionType")-3);
+            if(test.contains("baseStreet")){
+                test = test.substring(test.indexOf("baseStreet"));
+                test = test.substring(0, test.indexOf("intersectionType")-3);
 
-            String[] rue = test.split(",");
+                String[] rue = test.split(",");
 
-            for(int i=0;i<rue.length;i++){
-                rue[i] = rue[i].substring(rue[i].indexOf(":")+1);
-                rue[i] = rue[i].replace("\"","");
-                //nomsRue.add(rue[i]);
+                while(hashNomRue.containsKey(weight)){
+                    weight++;
+                }
+
+                for(int i=0;i<rue.length;i++){
+                    rue[i] = rue[i].substring(rue[i].indexOf(":")+1);
+                    rue[i] = rue[i].replace("\"","");
+                    //nomsRue.add(rue[i]);
+                    if(!hashNomRue.containsValue(rue[i])){
+                        hashNomRue.put(weight+i,rue[i]);
+                    }else{
+                        String set = String.valueOf(hashNomRue.entrySet());
+                        set = set.substring(0, set.indexOf(rue[i])-1);
+                        if(set.contains(" ")){
+                            set = set.substring(set.lastIndexOf(" ")+1);
+                        }else{
+                            set = set.substring(1);
+                        }
+                        if(Integer.parseInt(set)>weight+i){
+                            hashNomRue.put(weight+i,rue[i]);
+                            hashNomRue.remove(Integer.parseInt(set));
+                        }
+                    }
+                    comptage++;
+                    //Log.d("lsdvezfzefz", rue[i]);
+                }
             }
 
-            nomsRue = Arrays.asList(rue);
+            //nomsRue = Arrays.asList(rue);
 
             //Toast.makeText(this, "error", Toast.LENGTH_SHORT).show();
         }catch(IOException e){
@@ -330,5 +373,77 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
         }
 
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        //txtLat = (TextView) findViewById(R.id.textview1);
+        //txtLat = "Latitude:" + location.getLatitude() + ", Longitude:" + location.getLongitude();
+        locationManager.removeUpdates(this);
+        if(!getGPSlocation){
+            getGPSlocation = true;
+            latitude = Double.toString(location.getLatitude()).substring(0,Double.toString(location.getLatitude()).indexOf(".") + 5);
+            longitude = Double.toString(location.getLongitude()).substring(0,Double.toString(location.getLongitude()).indexOf(".") + 5);
+
+            Double Lat = location.getLatitude();
+            Double Long = location.getLongitude();
+
+            coordinate = latitude + "," +  longitude;
+            Log.d("----------------------", coordinate);
+
+            /*for (int i=0; i<10; i++){
+                for(int j=0; j<10; j++){
+                    coordinate[i*10]
+                }
+            }*/
+
+            nomsRue = Arrays.asList("Rue Jules Vallès", "Rue Jean-Baptiste Clément", "Rue Roland Garros", "Allée Louis Blériot", "Rue Santos-Dumont", "Rue du Hameau", "Place Clément Ader", "Allée Louison Bobet", "Rond-Point Amadeus Mozart", "Allée des Colibris", "Allée des Hirondelles"); //API Bing  Allée des Hirondelles
+
+            collectBingApi(Lat, Long);
+
+            nomsRue = new ArrayList<>(listNomRue.values());
+
+            nomsRue = nomsRue.subList(0,20);
+
+            createListRue(nomsRue);
+
+            showList(infoRues);
+        }
+    }
+
+    public void collectBingApi(Double Lat, Double Long){
+
+        Double latDist = 0.00045;
+        Double longDist = 0.00075;
+
+        Lat -= 5 * latDist;
+        Long -= 5 * longDist;
+
+       // .substring(0,Double.toString(location.getLongitude()).indexOf(".") + 5);
+
+        for(int i=0;i<11;i++){
+            for(int j=0;j<11;j++){
+                makeBingAPICall(Double.toString(Lat+(i*latDist)).substring(0,Double.toString(Lat+(i*latDist)).indexOf(".") + 6),Double.toString(Long+(j*longDist)).substring(0,Double.toString(Long+(j*longDist)).indexOf(".") + 6), (int) Math.sqrt(((i-5)*(i-5))+((j-5)*(j-5)))*1000);
+            }
+        }
+
+        listNomRue.putAll(hashNomRue);
+
+        Log.d("uhijnjk", Integer.toString(comptage));
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+        Log.d("Latitude","status");
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+        Log.d("Latitude","enable");
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+        Log.d("Latitude","disable");
     }
 }
