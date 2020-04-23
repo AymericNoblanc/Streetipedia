@@ -26,7 +26,10 @@ import com.google.gson.GsonBuilder;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import retrofit2.Call;
 import retrofit2.Retrofit;
@@ -42,7 +45,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
     String provider;
     String latitude, longitude;
     protected boolean gps_enabled, network_enabled;
-    String [] coordinate;
+    String coordinate;
 
     boolean getGPSlocation;
 
@@ -58,6 +61,9 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
     List<Rue> infoRues = new ArrayList<>();
 
+    Map<Integer, String> hashNomRue = new HashMap<>();
+    TreeMap<Integer, String> listNomRue = new TreeMap<>(hashNomRue);
+    Integer comptage = 0;
 
     private List<String> nomsRue;
 
@@ -158,8 +164,6 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
         // define an adapter
         ListAdapter mAdapter = new ListAdapter(rueList, this);
         recyclerView.setAdapter(mAdapter);
-
-
     }
 
     public void makeAPICallSearch(String search){
@@ -255,25 +259,48 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
         return WikipediaApi.getWikipediaResponseImage("query", search, "json", "pageimages");
     }
 
-    public void makeBingAPICall(String bingUrl){
+    public void makeBingAPICall(String latitudeVar, String longitudeVar, Integer weight){
 
-        Call<String> call = callBingApi(bingUrl);
+        Call<String> call = callBingApi("http://dev.virtualearth.net/REST/v1/Locations/" + latitudeVar + "," +  longitudeVar + "?o=json&incl=ciso2&key=AsKDhGrY05ocf_6ajFmtLjPfnPI1MxXFALXyVw9kRNrsDlSmEygCllcwizQbnUuS");
         try{
             test = call.execute().body();
-            test = test.substring(test.indexOf("baseStreet"));
-            test = test.substring(0, test.indexOf("intersectionType")-3);
+            if(test.contains("baseStreet")){
+                test = test.substring(test.indexOf("baseStreet"));
+                test = test.substring(0, test.indexOf("intersectionType")-3);
 
-            String[] rue = test.split(",");
+                String[] rue = test.split(",");
 
-            for(int i=0;i<rue.length;i++){
-                rue[i] = rue[i].substring(rue[i].indexOf(":")+1);
-                rue[i] = rue[i].replace("\"","");
-                //nomsRue.add(rue[i]);
+                while(hashNomRue.containsKey(weight)){
+                    weight++;
+                }
+
+                for(int i=0;i<rue.length;i++){
+                    rue[i] = rue[i].substring(rue[i].indexOf(":")+1);
+                    rue[i] = rue[i].replace("\"","");
+                    //nomsRue.add(rue[i]);
+                    if(!hashNomRue.containsValue(rue[i])){
+                        hashNomRue.put(weight+i,rue[i]);
+                    }else{
+                        String set = String.valueOf(hashNomRue.entrySet());
+                        set = set.substring(0, set.indexOf(rue[i])-1);
+                        if(set.contains(" ")){
+                            set = set.substring(set.lastIndexOf(" ")+1);
+                        }else{
+                            set = set.substring(1);
+                        }
+                        if(Integer.parseInt(set)>weight+i){
+                            hashNomRue.put(weight+i,rue[i]);
+                            hashNomRue.remove(Integer.parseInt(set));
+                        }
+                    }
+                    comptage++;
+                    //Log.d("lsdvezfzefz", rue[i]);
+                }
             }
 
-            nomsRue = Arrays.asList(rue);
+            //nomsRue = Arrays.asList(rue);
 
-            //Toast.makeText(this, "error", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "error", Toast.LENGTH_SHORT).show();
         }catch(IOException e){
             Toast.makeText(this, "error", Toast.LENGTH_SHORT).show();
         }
@@ -374,10 +401,14 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
         locationManager.removeUpdates(this);
         if(!getGPSlocation){
             getGPSlocation = true;
-            latitude = Double.toString(location.getLatitude()).substring(0,Double.toString(location.getLatitude()).indexOf(".") + 6);
-            longitude = Double.toString(location.getLongitude()).substring(0,Double.toString(location.getLongitude()).indexOf(".") + 6);
-            coordinate[0] = latitude + "," +  longitude;
-            Log.d("----------------------", coordinate[0]);
+            latitude = Double.toString(location.getLatitude()).substring(0,Double.toString(location.getLatitude()).indexOf(".") + 5);
+            longitude = Double.toString(location.getLongitude()).substring(0,Double.toString(location.getLongitude()).indexOf(".") + 5);
+
+            Double Lat = location.getLatitude();
+            Double Long = location.getLongitude();
+
+            coordinate = latitude + "," +  longitude;
+            Log.d("----------------------", coordinate);
 
             /*for (int i=0; i<10; i++){
                 for(int j=0; j<10; j++){
@@ -387,12 +418,35 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
             nomsRue = Arrays.asList("Rue Jules Vallès", "Avenue du Général De Gaule", "Rue de l'Orme"); //API Bing
 
-            makeBingAPICall("http://dev.virtualearth.net/REST/v1/Locations/48.75777,2.68895?o=json&incl=ciso2&key=AsKDhGrY05ocf_6ajFmtLjPfnPI1MxXFALXyVw9kRNrsDlSmEygCllcwizQbnUuS");
+            collectBingApi(Lat, Long);
+
+            //nomsRue = new ArrayList<>(listTypeVoie);
 
             createListRue(nomsRue);
 
             showList(infoRues);
         }
+    }
+
+    public void collectBingApi(Double Lat, Double Long){
+
+        Double latDist = 0.00045;
+        Double longDist = 0.00075;
+
+        Lat -= 5 * latDist;
+        Long -= 5 * longDist;
+
+       // .substring(0,Double.toString(location.getLongitude()).indexOf(".") + 5);
+
+        for(int i=0;i<11;i++){
+            for(int j=0;j<11;j++){
+                makeBingAPICall(Double.toString(Lat+(i*latDist)).substring(0,Double.toString(Lat+(i*latDist)).indexOf(".") + 6),Double.toString(Long+(j*longDist)).substring(0,Double.toString(Long+(j*longDist)).indexOf(".") + 6), (int) Math.sqrt(((i-5)*(i-5))+((j-5)*(j-5)))*1000);
+            }
+        }
+
+        listNomRue.putAll(hashNomRue);
+
+        Log.d("uhijnjk", Integer.toString(comptage));
     }
 
     @Override
