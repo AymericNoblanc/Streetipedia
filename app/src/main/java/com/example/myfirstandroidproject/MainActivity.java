@@ -50,7 +50,6 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
     boolean getGPSlocation;
 
     private SwipeRefreshLayout swipeContainer;
-    private SearchView searchBar;
     ResultsWikiSearch results;
     ResultsWikiInfo resultsInfo;
 
@@ -127,30 +126,6 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
                 android.R.color.holo_orange_light,
                 android.R.color.holo_red_light);
 
-        searchBar = findViewById(R.id.searchView);
-        searchBar.setSubmitButtonEnabled(true);
-        searchBar.setQuery("",false);
-
-        searchBar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                searchBar.setIconified(false);
-            }
-        });
-
-        searchBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                makeAPICallSearch(query);
-                searchBar.setIconified(true);
-                return false;
-            }
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                return false;
-            }
-        });
-    
     }
 
     private void showList(List<Rue> rueList) {
@@ -188,7 +163,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
         WikipediaApiSearch WikipediaApi = retrofit.create(WikipediaApiSearch.class);
 
-        return WikipediaApi.getWikipediaResponse("query", "25", "classic","snippet", "search", search, "", "json");
+        return WikipediaApi.getWikipediaResponse("query", "1", "classic","snippet", "search", search, "", "json");
 
     }
 
@@ -229,9 +204,15 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
                 url = url.substring(0,url.indexOf("\""));
                 url2 = url;
                 if(!(url2.contains("svg"))){
-                    url2 = url2.replace("/thumb", "");
-                    url2 = url2.substring(0, url.indexOf(".jpg")-6);
-                    url2 = url2.concat(".jpg");
+                    if(url2.contains("jpg")){
+                        url2 = url2.replace("/thumb", "");
+                        url2 = url2.substring(0, url.indexOf(".jpg")-6);
+                        url2 = url2.concat(".jpg");
+                    }else if(url2.contains("png")){
+                        url2 = url2.replace("/thumb", "");
+                        url2 = url2.substring(0, url.indexOf(".png")-6);
+                        url2 = url2.concat(".png");
+                    }
                 }
             }else{
                 url=null;
@@ -300,7 +281,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
             //nomsRue = Arrays.asList(rue);
 
-            Toast.makeText(this, "error", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(this, "error", Toast.LENGTH_SHORT).show();
         }catch(IOException e){
             Toast.makeText(this, "error", Toast.LENGTH_SHORT).show();
         }
@@ -416,11 +397,13 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
                 }
             }*/
 
-            nomsRue = Arrays.asList("Rue Jules Vallès", "Avenue du Général De Gaule", "Rue de l'Orme"); //API Bing
+            nomsRue = Arrays.asList("Rue Jules Vallès", "Rue Jean-Baptiste Clément", "Rue Roland Garros", "Allée Louis Blériot", "Rue Santos-Dumont", "Rue du Hameau", "Place Clément Ader", "Allée Louison Bobet", "Rond-Point Amadeus Mozart", "Allée des Colibris", "Allée des Hirondelles"); //API Bing  Allée des Hirondelles
 
             collectBingApi(Lat, Long);
 
-            //nomsRue = new ArrayList<>(listTypeVoie);
+            nomsRue = new ArrayList<>(listNomRue.values());
+
+            nomsRue = nomsRue.subList(0,20);
 
             createListRue(nomsRue);
 
