@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
 
 import retrofit2.Call;
 import retrofit2.Retrofit;
@@ -64,7 +65,9 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
     TreeMap<Integer, String> listNomRue = new TreeMap<>(hashNomRue);
     Integer comptage = 0;
 
-    private List<String> nomsRue;
+    boolean GPSrefresh = false;
+
+    private List<String> nomsRue = new ArrayList<>();
 
     private List<String> listTypeVoie = Arrays.asList("Allée ", "Avenue ", "Av. ", "Boulevard ", "Carrefour ", "Chemin ", "Chaussée ", "Cité ", "Corniche ", "Cours ", "Domaine ",
             "Descente ", "Ecart ", "Esplanade ", "Faubourg ", "Grande Rue ", "Hameau ", "Halle ", "Impasse ", "Lieu-dit ", "Lottissement ", "Marché ", "Montée ", "Passage ", "Passerelle ",
@@ -121,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
             }
         });
         // Configure the refreshing colors
-        swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
+       swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
                 android.R.color.holo_green_light,
                 android.R.color.holo_orange_light,
                 android.R.color.holo_red_light);
@@ -307,13 +310,23 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
     public void refresh() {
 
         //TODO refresh the positon and so the list
-        List<String> nomsRue2 = Arrays.asList("Rue Jules Verne", "Chemin du Plume-Vert", "Allée des Hirondelles");
 
-        createListRue(nomsRue2);
+        getGPSlocation = false;
 
-        showList(infoRues);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
 
         swipeContainer.setRefreshing(false);
+
     }
 
     @Override
@@ -380,7 +393,11 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
         //txtLat = (TextView) findViewById(R.id.textview1);
         //txtLat = "Latitude:" + location.getLatitude() + ", Longitude:" + location.getLongitude();
         locationManager.removeUpdates(this);
+        /*if(GPSrefresh){
+            GPSOnRefresh(location);
+        }*/
         if(!getGPSlocation){
+            GPSrefresh=true;
             getGPSlocation = true;
             latitude = Double.toString(location.getLatitude()).substring(0,Double.toString(location.getLatitude()).indexOf(".") + 5);
             longitude = Double.toString(location.getLongitude()).substring(0,Double.toString(location.getLongitude()).indexOf(".") + 5);
@@ -397,13 +414,15 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
                 }
             }*/
 
-            nomsRue = Arrays.asList("Rue Jules Vallès", "Rue Jean-Baptiste Clément", "Rue Roland Garros", "Allée Louis Blériot", "Rue Santos-Dumont", "Rue du Hameau", "Place Clément Ader", "Allée Louison Bobet", "Rond-Point Amadeus Mozart", "Allée des Colibris", "Allée des Hirondelles"); //API Bing  Allée des Hirondelles
+            //nomsRue = Arrays.asList("Rue Jules Vallès", "Rue Jean-Baptiste Clément", "Rue Roland Garros", "Allée Louis Blériot", "Rue Santos-Dumont", "Rue du Hameau", "Place Clément Ader", "Allée Louison Bobet", "Rond-Point Amadeus Mozart", "Allée des Colibris", "Allée des Hirondelles"); //API Bing  Allée des Hirondelles
 
             collectBingApi(Lat, Long);
 
             nomsRue = new ArrayList<>(listNomRue.values());
 
-            nomsRue = nomsRue.subList(0,20);
+            if(nomsRue.size()>=20){
+                nomsRue = nomsRue.subList(0,20);
+            }
 
             createListRue(nomsRue);
 
@@ -413,17 +432,48 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
     public void collectBingApi(Double Lat, Double Long){
 
+        listNomRue.clear();
+        hashNomRue.clear();
+
+        int distanceMax = 3;
+
         Double latDist = 0.00045;
         Double longDist = 0.00075;
 
-        Lat -= 5 * latDist;
-        Long -= 5 * longDist;
+        String stringLat;
+        String stringLong;
+        int weight;
+
+       if(Lat.toString().length()-Lat.toString().indexOf(".")+1<5){
+            Lat += 0.00001;
+        }
+        Lat = Double.parseDouble(Lat.toString().substring(0,Lat.toString().indexOf(".")+6));
+
+        if(Long.toString().length()-Long.toString().indexOf(".")+1<5){
+            Long += 0.00001;
+        }
+        Long = Double.parseDouble(Long.toString().substring(0,Long.toString().indexOf(".")+6));
+
+
+        Lat -= distanceMax * latDist;
+        Long -= distanceMax * longDist;
 
        // .substring(0,Double.toString(location.getLongitude()).indexOf(".") + 5);
 
-        for(int i=0;i<11;i++){
-            for(int j=0;j<11;j++){
-                makeBingAPICall(Double.toString(Lat+(i*latDist)).substring(0,Double.toString(Lat+(i*latDist)).indexOf(".") + 6),Double.toString(Long+(j*longDist)).substring(0,Double.toString(Long+(j*longDist)).indexOf(".") + 6), (int) Math.sqrt(((i-5)*(i-5))+((j-5)*(j-5)))*1000);
+        for(int i=0;i<distanceMax*2+1;i++){
+            for(int j=0;j<distanceMax*2+1;j++){
+
+                if(Double.toString(Lat+(i*latDist)).length()-Double.toString(Lat+(i*latDist)).indexOf(".")+1<5){
+                    Lat += 0.00001;
+                }
+                if(Double.toString(Long+(j*longDist)).length()-Double.toString(Long+(j*longDist)).indexOf(".")+1<5){
+                    Long += 0.00001;
+                }
+
+                stringLat = Double.toString(Lat+(i*latDist));
+                stringLong = Double.toString(Long+(j*longDist));
+                weight = (int) (Math.sqrt(((i-distanceMax)*(i-distanceMax))+((j-distanceMax)*(j-distanceMax)))*1000);
+                makeBingAPICall(stringLat, stringLong, weight);
             }
         }
 
@@ -446,4 +496,5 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
     public void onProviderDisabled(String provider) {
         Log.d("Latitude","disable");
     }
+
 }
