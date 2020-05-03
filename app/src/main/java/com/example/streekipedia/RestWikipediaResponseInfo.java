@@ -1,4 +1,4 @@
-package com.example.myfirstandroidproject;
+package com.example.streekipedia;
 
 public class RestWikipediaResponseInfo {
 

@@ -1,19 +1,13 @@
-package com.example.myfirstandroidproject;
+package com.example.streekipedia;
 
 import java.io.Serializable;
 
 public class ResultWikiInfo implements Serializable {
 
-    private String title;
     private String extract;
 
-    public ResultWikiInfo(String title, String extract) {
-        this.title = title;
+    public ResultWikiInfo(String extract) {
         this.extract = extract;
-    }
-
-    String getTitle() {
-        return title;
     }
 
     String getExtract() {

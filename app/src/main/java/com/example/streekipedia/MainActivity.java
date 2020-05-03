@@ -1,4 +1,4 @@
-package com.example.myfirstandroidproject;
+package com.example.streekipedia;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -22,10 +23,8 @@ import android.transition.TransitionManager;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
-import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
-import android.widget.SearchView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -39,8 +38,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import retrofit2.Call;
@@ -51,14 +50,8 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
 public class MainActivity extends AppCompatActivity implements ListAdapter.SelectedPage, LocationListener {
 
     protected LocationManager locationManager;
-    protected LocationListener locationListener;
-    protected Context context;
-    String lat;
-    String provider;
     String latitude, longitude;
     Double Lat, Long;
-    protected boolean gps_enabled, network_enabled;
-    String coordinate;
 
     boolean getGPSlocation;
     boolean recyclerViewStatue;
@@ -66,8 +59,6 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
     private SwipeRefreshLayout swipeContainer;
     ResultsWikiSearch results;
     ResultsWikiInfo resultsInfo;
-
-    Location location;
 
     String url = null;
     String url2 = null;
@@ -78,19 +69,13 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
     Map<Integer, String> hashNomRue = new HashMap<>();
     TreeMap<Integer, String> listNomRue = new TreeMap<>(hashNomRue);
-    Integer comptage = 0;
 
     RecyclerView recyclerView;
-
-    boolean GPSrefresh = false;
-
-    private List<String> nomsRue = new ArrayList<>();
 
     private List<String> listTypeVoie = Arrays.asList("Allée ", "Avenue ", "Av. ", "Boulevard ", "Carrefour ", "Chemin ", "Chaussée ", "Cité ", "Corniche ", "Cours ", "Domaine ",
             "Descente ", "Ecart ", "Esplanade ", "Faubourg ", "Grande Rue ", "Hameau ", "Halle ", "Impasse ", "Lieu-dit ", "Lottissement ", "Marché ", "Montée ", "Passage ", "Passerelle ",
             "Place ", "Plaine ", "Plateau ", "Promenade ", "Parvis ", "Quartier ", "Quai ", "Résidence ", "Ruelle ", "Rocade ", "Rond-Point ", "Route ", "Rue ", "Sentier ",
             "Square ", "Terre-Plein ", "Terrasse ", "Traverse ", "Villa ", "Village ");
-    private String titre;
 
     private static final String BASE_URL = "https://fr.wikipedia.org/w/";
     private static final String BASE_BING_URL = "http://dev.virtualearth.net/REST/v1/Locations/";
@@ -129,15 +114,15 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        layout = (ConstraintLayout) findViewById(R.id.layout);
+        layout = findViewById(R.id.layout);
 
         constraintSetNormal.clone(layout);
         constraintSetReglage.clone(this, R.layout.activity_main_reglage);
 
-        progressBarHolder = (FrameLayout) findViewById(R.id.progressBarHolder);
-        recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        progressBarHolder = findViewById(R.id.progressBarHolder);
+        recyclerView = findViewById(R.id.recycler_view);
 
-        reglageButton = (ImageButton) findViewById(R.id.imageButton);
+        reglageButton = findViewById(R.id.imageButton);
         reglageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -156,14 +141,14 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
         oldValue=1;
 
-        seekBar = (SeekBar) findViewById(R.id.seekBar);
+        seekBar = findViewById(R.id.seekBar);
         seekBar.setProgress(0);
         seekBar.incrementProgressBy(1);
         seekBar.setMax(4);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @SuppressLint("SetTextI18n")
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                //textView.setText(String.valueOf(progress));
                 switch(progress){
                     case 0:
                         surfaceTV.setText("Surface : Position");
@@ -195,6 +180,8 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
                         surface = 5;
                         pas = 1;
                         break;
+                    default:
+                        throw new IllegalStateException("Unexpected value: " + progress);
                 }
             }
 
@@ -215,11 +202,11 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
             }
         });
 
-        rapiditeTV = (TextView) findViewById(R.id.rapidite);
-        quantiteTV = (TextView) findViewById(R.id.quantite);
-        surfaceTV = (TextView) findViewById(R.id.surface);
-        pasTV = (TextView) findViewById(R.id.pas);
-        rectangle = (View) findViewById(R.id.myRectangleView);
+        rapiditeTV = findViewById(R.id.rapidite);
+        quantiteTV = findViewById(R.id.quantite);
+        surfaceTV = findViewById(R.id.surface);
+        pasTV = findViewById(R.id.pas);
+        rectangle = findViewById(R.id.myRectangleView);
 
         recyclerViewStatue = false;
         getGPSlocation = false;
@@ -233,16 +220,6 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
         }
 
         new Chargement().execute();
-
-        /*Log.d("----------------------",txtLat);
-
-        nomsRue = Arrays.asList("Rue Jules Vallès", "Avenue du Général De Gaule", "Rue de l'Orme"); //API Bing
-
-        makeBingAPICall("http://dev.virtualearth.net/REST/v1/Locations/48.75777,2.68895?o=json&incl=ciso2&key=AsKDhGrY05ocf_6ajFmtLjPfnPI1MxXFALXyVw9kRNrsDlSmEygCllcwizQbnUuS");
-
-        createListRue(nomsRue);
-
-        showList(infoRues);*/
 
         // Lookup the swipe container view
         swipeContainer = findViewById(R.id.swipeContainer);
@@ -280,7 +257,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
     public void makeAPICallSearch(String search){
         Call<RestWikipediaResponseSearch> call = callRestApiWikipediaSearch(search);
         try{
-            results = call.execute().body().getQuery();
+            results = Objects.requireNonNull(call.execute().body()).getQuery();
         }catch(IOException e){
             Toast.makeText(this, "error", Toast.LENGTH_SHORT).show();
         }
@@ -307,7 +284,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
         Call<RestWikipediaResponseInfo> call = callRestApiWikipediaInfo(search);
         try{
-            resultsInfo = call.execute().body().getQuery();
+            resultsInfo = Objects.requireNonNull(call.execute().body()).getQuery();
         }catch(IOException e){
             Toast.makeText(this, "error", Toast.LENGTH_SHORT).show();
         }
@@ -335,6 +312,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
         Call<String> call = callRestApiWikipediaImage(search);
         try{
             url = call.execute().body();
+            assert url != null;
             if(url.contains("https://upload.wikimedia.org")) {
                 url = url.substring(url.indexOf("https://upload.wikimedia.org"));
                 url = url.substring(0,url.indexOf("\""));
@@ -381,6 +359,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
         Call<String> call = callBingApi("http://dev.virtualearth.net/REST/v1/Locations/" + latitudeVar + "," +  longitudeVar + "?o=json&incl=ciso2&key=AsKDhGrY05ocf_6ajFmtLjPfnPI1MxXFALXyVw9kRNrsDlSmEygCllcwizQbnUuS");
         try{
             test = call.execute().body();
+            assert test != null;
             if(test.contains("baseStreet")){
                 test = test.substring(test.indexOf("baseStreet"));
                 test = test.substring(0, test.indexOf("intersectionType")-3);
@@ -410,14 +389,9 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
                             hashNomRue.remove(Integer.parseInt(set));
                         }
                     }
-                    comptage++;
-                    //Log.d("lsdvezfzefz", rue[i]);
                 }
             }
 
-            //nomsRue = Arrays.asList(rue);
-
-            //Toast.makeText(this, "error", Toast.LENGTH_SHORT).show();
         }catch(IOException e){
             Toast.makeText(this, "error", Toast.LENGTH_SHORT).show();
         }
@@ -466,7 +440,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
             newRue.setNomRue(nomsRue.get(i));
 
-            titre = nomsRue.get(i);
+            String titre = nomsRue.get(i);
             for(int j=0; j<listTypeVoie.size();j++){
                 titre = titre.replace(listTypeVoie.get(j), "");
             }
@@ -491,7 +465,6 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
             newRue.setTitre(titre);
 
             makeAPICallSearch(newRue.getTitre());
-            //newRue.setSnippet(results.getSearch().get(0).getSnippet());
 
             newRue.setPageId(results.getSearch().get(0).getPageid());
 
@@ -516,20 +489,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
     public void chargement () {
         if(!getGPSlocation){
-            GPSrefresh=true;
             getGPSlocation = true;
-
-            coordinate = latitude + "," +  longitude;
-            Log.d("----------------------", coordinate);
-
-            /*for (int i=0; i<10; i++){
-                for(int j=0; j<10; j++){
-                    coordinate[i*10]
-                }
-            }*/
-
-            //nomsRue = Arrays.asList("Rue Jules Vallès", "Rue Jean-Baptiste Clément", "Rue Roland Garros", "Allée Louis Blériot", "Rue Santos-Dumont", "Rue du Hameau", "Place Clément Ader", "Allée Louison Bobet", "Rond-Point Amadeus Mozart", "Allée des Colibris", "Allée des Hirondelles"); //API Bing  Allée des Hirondelles
-
 
             //A way to wait the GPS Location and not do the Bing API call without location
             try {
@@ -540,7 +500,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
             collectBingApi();
 
-            nomsRue = new ArrayList<>(listNomRue.values());
+            List<String> nomsRue = new ArrayList<>(listNomRue.values());
 
             if(nomsRue.size()>=20){
                 nomsRue = nomsRue.subList(0,20);
@@ -552,13 +512,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
     @Override
     public void onLocationChanged(Location location) {
-        //txtLat = (TextView) findViewById(R.id.textview1);
-        //txtLat = "Latitude:" + location.getLatitude() + ", Longitude:" + location.getLongitude();
         locationManager.removeUpdates(this);
-        /*if(GPSrefresh){
-            GPSOnRefresh(location);
-        }*/
-
     }
 
     public void collectBingApi(){
@@ -568,8 +522,8 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
         int distanceMax = surface;
 
-        Double latDist = 0.00045*pas;//50m * le pas
-        Double longDist = 0.00075*pas;//50m * le pas
+        double latDist = 0.00045*pas;//50m * le pas
+        double longDist = 0.00075*pas;//50m * le pas
 
         String stringLat;
         String stringLong;
@@ -589,8 +543,6 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
         Lat -= distanceMax * latDist;
         Long -= distanceMax * longDist;
 
-       // .substring(0,Double.toString(location.getLongitude()).indexOf(".") + 5);
-
         for(int i=0;i<distanceMax*2+1;i++){
             for(int j=0;j<distanceMax*2+1;j++){
 
@@ -609,8 +561,6 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
         }
 
         listNomRue.putAll(hashNomRue);
-
-        Log.d("uhijnjk", Integer.toString(comptage));
     }
 
     @Override
@@ -629,6 +579,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
     }
 
 
+    @SuppressLint("StaticFieldLeak")
     private class Chargement extends AsyncTask<Void, Void, Void> implements LocationListener{
 
         @Override
@@ -719,8 +670,4 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
         }
     }
-
-
 }
-
-//6200EE

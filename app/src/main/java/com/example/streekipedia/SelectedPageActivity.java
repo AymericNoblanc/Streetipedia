@@ -1,4 +1,4 @@
-package com.example.myfirstandroidproject;
+package com.example.streekipedia;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -24,8 +24,6 @@ public class SelectedPageActivity extends AppCompatActivity {
 
     Rue result;
 
-    boolean isImageViewNormal=true;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,6 +39,7 @@ public class SelectedPageActivity extends AppCompatActivity {
             result = (Rue) intent.getSerializableExtra("data");
         }
 
+        assert result != null;
         pageSelectedText.setText(result.getDescription());
         pageSelectedName.setText(result.getTitre());
         pageSelectedText.setMovementMethod(new ScrollingMovementMethod());
@@ -66,18 +65,5 @@ public class SelectedPageActivity extends AppCompatActivity {
 
         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://fr.wikipedia.org/?curid="+ result.getPageId()));
         startActivity(browserIntent);
-    }
-
-    //tests -> don't work
-    public void animateImageView(View view) {
-        if(isImageViewNormal){
-            picture.getLayoutParams().width = view.getWidth();
-            picture.getLayoutParams().height = view.getHeight();
-            isImageViewNormal=false;
-        }else{
-            picture.getLayoutParams().width = 145;
-            picture.getLayoutParams().height = 145;
-            isImageViewNormal=true;
-        }
     }
 }

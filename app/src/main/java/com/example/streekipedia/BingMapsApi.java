@@ -1,4 +1,4 @@
-package com.example.myfirstandroidproject;
+package com.example.streekipedia;
 
 import retrofit2.Call;
 import retrofit2.http.GET;

@@ -1,8 +1,8 @@
-package com.example.myfirstandroidproject;
+package com.example.streekipedia;
 
 import java.io.Serializable;
 
-public class Rue implements Serializable {
+class Rue implements Serializable {
 
     private String nomRue;
     private String titre;
@@ -11,16 +11,6 @@ public class Rue implements Serializable {
     private String description;
     private String thumbnail;
     private String image;
-
-    /*public Rue(String nomRue, String titre, Integer pageId, String snippet, String description, ImageView thumbnail, ImageView image) {
-        this.nomRue = nomRue;
-        this.titre = titre;
-        this.pageId = pageId;
-        this.snippet = snippet;
-        this.description = description;
-        this.thumbnail = thumbnail;
-        this.image = image;
-    }*/
 
     Rue() {
 
