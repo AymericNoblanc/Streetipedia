@@ -25,9 +25,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder>{
-    private List<ResultWikiSearch> values;
-
-    private String url = null;
+    private List<Rue> values;
 
     private SelectedPage selectedPage;
 
@@ -59,7 +57,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder>{
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    ListAdapter(List<ResultWikiSearch> myDataset, SelectedPage selectedPage) {
+    ListAdapter(List<Rue> myDataset, SelectedPage selectedPage) {
         values = myDataset;
         this.selectedPage = selectedPage;
     }
@@ -83,20 +81,21 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder>{
     public void onBindViewHolder(ViewHolder holder, final int position) {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
-        final ResultWikiSearch name = values.get(position);
-        holder.txtHeader.setText(name.getTitle());
+        final Rue name = values.get(position);
 
-        makeAPICallImage(Integer.toString(name.getPageid()));
+        //makeAPICallImage(Integer.toString(name.getPageid()));
 
-        if(url!=null){
-            Picasso.get().load(url).into(holder.Image);
+        if(name.getThumbnail()!=null){
+            Picasso.get().load(name.getThumbnail()).into(holder.Image);
         }else{
             holder.Image.setImageResource(R.drawable.ic_visibility_off_black_24dp);
         }
 
-        if(position==0){
+        if(name.getNomRue().endsWith("*")){
             holder.layout.setBackgroundResource(R.color.firstResultColor);
+            name.setNomRue(name.getNomRue().substring(0,name.getNomRue().indexOf("*")));
         }
+        holder.txtHeader.setText(name.getNomRue());
 
         String text = Jsoup.parse(name.getSnippet()).text();
         holder.txtFooter.setText(text);
@@ -109,51 +108,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder>{
     }
 
     public interface SelectedPage{
-        void selectedPage (ResultWikiSearch result);
+        void selectedPage (Rue result);
     }
-
-    private void makeAPICallImage(String search){
-
-        Call<String> call = callRestApiWikipediaImage(search);
-        call.enqueue(new Callback<String>() {
-            @Override
-            public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
-                if(response.isSuccessful() && response.body() != null){
-                    url = response.body();
-                    if(url.contains("https://upload.wikimedia.org")) {
-                        url = url.substring(url.indexOf("https://upload.wikimedia.org"));
-                        url = url.concat(".jpg");
-                        url = url.substring(0, url.lastIndexOf(".jpg"));
-                        url = url.concat(".jpg");
-                    }else{
-                        url=null;
-                    }
-                    //}
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
-            }
-        });
-    }
-
-    private Call<String> callRestApiWikipediaImage(String search) {
-
-        Gson gson = new GsonBuilder()
-                .setLenient()
-                .create();
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://en.wikipedia.org/w/")
-                .addConverterFactory(ScalarsConverterFactory.create())
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .build();
-
-        WikipediaApiImage WikipediaApi = retrofit.create(WikipediaApiImage.class);
-
-        return WikipediaApi.getWikipediaResponseImage("query", search, "json", "pageimages");
-    }
-
 
 }
