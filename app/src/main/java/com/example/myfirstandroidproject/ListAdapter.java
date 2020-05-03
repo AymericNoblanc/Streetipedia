@@ -82,7 +82,6 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder>{
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
         final Rue name = values.get(position);
-        holder.txtHeader.setText(name.getNomRue());
 
         //makeAPICallImage(Integer.toString(name.getPageid()));
 
@@ -92,9 +91,11 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder>{
             holder.Image.setImageResource(R.drawable.ic_visibility_off_black_24dp);
         }
 
-        if(position==0){
+        if(name.getNomRue().endsWith("*")){
             holder.layout.setBackgroundResource(R.color.firstResultColor);
+            name.setNomRue(name.getNomRue().substring(0,name.getNomRue().indexOf("*")));
         }
+        holder.txtHeader.setText(name.getNomRue());
 
         String text = Jsoup.parse(name.getSnippet()).text();
         holder.txtFooter.setText(text);
