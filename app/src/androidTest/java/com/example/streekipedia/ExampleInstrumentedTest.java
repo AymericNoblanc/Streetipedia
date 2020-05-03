@@ -1,4 +1,4 @@
-package com.example.myfirstandroidproject;
+package com.example.streekipedia;
 
 import android.content.Context;
 
