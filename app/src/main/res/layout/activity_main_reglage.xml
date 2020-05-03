@@ -14,7 +14,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@+id/myRectangleView">
 
 
         <androidx.recyclerview.widget.RecyclerView
@@ -50,14 +50,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@null"
-        android:src="@mipmap/reglage_logo"
         android:clickable="true"
         android:focusable="true"
+        android:src="@mipmap/reglage_logo"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.95"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/swipeContainer"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.97" />
 
     <View
@@ -65,7 +65,6 @@
         android:layout_width="match_parent"
         android:layout_height="59dp"
         android:background="@drawable/rectangle"
-        android:visibility="invisible"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -74,11 +73,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:text="Surface : 100x100"
+        android:text="Surface : Position"
         android:textAlignment="center"
         android:textColor="#858585"
         android:textStyle="bold"
-        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="@+id/myRectangleView"
         app:layout_constraintEnd_toStartOf="@+id/quantite"
         app:layout_constraintStart_toStartOf="parent" />
@@ -88,11 +86,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:text="Pas : 100m"
+        android:text="Pas : 0m"
         android:textAlignment="center"
         android:textColor="#858585"
         android:textStyle="bold"
-        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="@+id/myRectangleView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@+id/seekBar" />
@@ -107,7 +104,6 @@
         android:textAlignment="center"
         android:textColor="#858585"
         android:textStyle="bold"
-        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="@+id/seekBar"
         app:layout_constraintStart_toEndOf="@+id/seekBar" />
 
@@ -120,13 +116,12 @@
         android:progress="0"
         android:progressTint="#939393"
         android:thumbTint="#939393"
-        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="@+id/myRectangleView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/myRectangleView"
         app:layout_constraintVertical_bias="0.254"
-        app:tickMarkTint="#939393"/>
+        app:tickMarkTint="#939393" />
 
     <TextView
         android:id="@+id/rapidite"
@@ -138,7 +133,6 @@
         android:textAlignment="center"
         android:textColor="#858585"
         android:textStyle="bold"
-        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="@+id/seekBar"
         app:layout_constraintEnd_toStartOf="@+id/seekBar" />
 
