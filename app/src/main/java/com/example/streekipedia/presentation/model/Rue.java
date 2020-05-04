@@ -1,8 +1,8 @@
-package com.example.streekipedia;
+package com.example.streekipedia.presentation.model;
 
 import java.io.Serializable;
 
-class Rue implements Serializable {
+public class Rue implements Serializable {
 
     private String nomRue;
     private String titre;
@@ -12,63 +12,63 @@ class Rue implements Serializable {
     private String thumbnail;
     private String image;
 
-    Rue() {
+    public Rue() {
 
     }
 
-    String getNomRue() {
+    public String getNomRue() {
         return nomRue;
     }
 
-    void setNomRue(String nomRue) {
+    public void setNomRue(String nomRue) {
         this.nomRue = nomRue;
     }
 
-    String getTitre() {
+    public String getTitre() {
         return titre;
     }
 
-    void setTitre(String titre) {
+    public void setTitre(String titre) {
         this.titre = titre;
     }
 
-    Integer getPageId() {
+    public Integer getPageId() {
         return pageId;
     }
 
-    void setPageId(Integer pageId) {
+    public void setPageId(Integer pageId) {
         this.pageId = pageId;
     }
 
-    String getSnippet() {
+    public String getSnippet() {
         return snippet;
     }
 
-    void setSnippet(String snippet) {
+    public void setSnippet(String snippet) {
         this.snippet = snippet;
     }
 
-    String getDescription() {
+    public String getDescription() {
         return description;
     }
 
-    void setDescription(String description) {
+    public void setDescription(String description) {
         this.description = description;
     }
 
-    String getThumbnail() {
+    public String getThumbnail() {
         return thumbnail;
     }
 
-    void setThumbnail(String thumbnail) {
+    public void setThumbnail(String thumbnail) {
         this.thumbnail = thumbnail;
     }
 
-    String getImage() {
+    public String getImage() {
         return image;
     }
 
-    void setImage(String image) {
+    public void setImage(String image) {
         this.image = image;
     }
 }

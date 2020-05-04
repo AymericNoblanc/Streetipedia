@@ -1,4 +1,6 @@
-package com.example.streekipedia;
+package com.example.streekipedia.data;
+
+import com.example.streekipedia.presentation.model.RestWikipediaResponseInfo;
 
 import retrofit2.Call;
 import retrofit2.http.GET;

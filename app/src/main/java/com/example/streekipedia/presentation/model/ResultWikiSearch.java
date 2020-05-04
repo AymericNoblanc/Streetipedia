@@ -1,4 +1,4 @@
-package com.example.streekipedia;
+package com.example.streekipedia.presentation.model;
 
 import java.io.Serializable;
 
@@ -10,7 +10,7 @@ public class ResultWikiSearch implements Serializable {
         this.pageid = pageid;
     }
 
-    Integer getPageid() {
+    public Integer getPageid() {
         return pageid;
     }
 }

@@ -1,4 +1,4 @@
-package com.example.streekipedia;
+package com.example.streekipedia.presentation.view;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -12,15 +12,17 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.transition.TransitionManager;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.widget.FrameLayout;
@@ -29,10 +31,22 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.streekipedia.R;
+import com.example.streekipedia.data.BingMapsApi;
+import com.example.streekipedia.data.WikipediaApiImage;
+import com.example.streekipedia.data.WikipediaApiInfo;
+import com.example.streekipedia.data.WikipediaApiSearch;
+import com.example.streekipedia.presentation.model.RestWikipediaResponseInfo;
+import com.example.streekipedia.presentation.model.RestWikipediaResponseSearch;
+import com.example.streekipedia.presentation.model.ResultsWikiInfo;
+import com.example.streekipedia.presentation.model.ResultsWikiSearch;
+import com.example.streekipedia.presentation.model.Rue;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -100,9 +114,16 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
     View rectangle;
 
     int pas=2;
+    int oldPas = pas;
     int surface=1;
 
     int oldValue;
+
+    ConnectivityManager connectivityManager;
+
+    SharedPreferences sharedPreferences;
+
+    Gson gson;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,6 +134,8 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        sharedPreferences = getSharedPreferences("sharePreference",Context.MODE_PRIVATE);
 
         layout = findViewById(R.id.layout);
 
@@ -154,7 +177,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
                         surfaceTV.setText("Surface : Position");
                         pasTV.setText("Pas : 0m");
                         surface = 0;
-                        pas = 1;
+                        pas = 2;
                         break;
                     case 1:
                         surfaceTV.setText("Surface : 100x100");
@@ -187,13 +210,13 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-
+                oldPas = pas;
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 if(oldValue<seekBar.getProgress()){
-                    if(infoRues.size()!=20){
+                    if(infoRues.size()!=20 || oldPas>pas){
                         refresh();
                     }
                     oldValue=seekBar.getProgress();
@@ -213,13 +236,27 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
-        try {
-            TimeUnit.MILLISECONDS.sleep(400);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        connectivityManager = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        new Chargement().execute();
+        assert connectivityManager != null;
+        if(Objects.requireNonNull(connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE)).getState() == NetworkInfo.State.CONNECTED ||
+                Objects.requireNonNull(connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI)).getState() == NetworkInfo.State.CONNECTED){
+            //There is a connexion
+
+            new Chargement().execute();
+
+        }else{
+            //There isn't a connexion
+
+            infoRues = getDataFromCache();
+
+            if(infoRues != null){
+                showList(infoRues);
+            }else{
+                Toast.makeText(this, "Veuillez vous connecter pour la première utilisation", Toast.LENGTH_SHORT).show();
+            }
+
+        }
 
         // Lookup the swipe container view
         swipeContainer = findViewById(R.id.swipeContainer);
@@ -227,16 +264,40 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                oldValue=seekBar.getProgress();
                 refresh();
+                oldValue=seekBar.getProgress();
             }
         });
         // Configure the refreshing colors
-       swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
+        swipeContainer.setColorSchemeResources(android.R.color.holo_blue_bright,
                 android.R.color.holo_green_light,
                 android.R.color.holo_orange_light,
                 android.R.color.holo_red_light);
 
+    }
+
+
+
+    private void saveList(List<Rue> rueList) {
+
+        String jsonListRue = gson.toJson(rueList);
+
+        sharedPreferences
+                .edit()
+                .putString("saveListRue", jsonListRue)
+                .apply();
+
+    }
+
+    private List<Rue> getDataFromCache() {
+        String jsonListRue = sharedPreferences.getString("saveListRue", null);
+
+        if (jsonListRue == null) {
+            return null;
+        }else{
+            Type listType = new TypeToken<List<Rue>>(){}.getType();
+            return (new Gson()).fromJson(jsonListRue, listType);
+        }
     }
 
     private void showList(List<Rue> rueList) {
@@ -265,7 +326,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
     private Call<RestWikipediaResponseSearch> callRestApiWikipediaSearch(String search) {
 
-        Gson gson = new GsonBuilder()
+        gson = new GsonBuilder()
                 .setLenient()
                 .create();
 
@@ -292,7 +353,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
     private Call<RestWikipediaResponseInfo> callRestApiWikipediaInfo(String search) {
 
-        Gson gson = new GsonBuilder()
+        gson = new GsonBuilder()
                 .setLenient()
                 .create();
 
@@ -339,7 +400,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
     private Call<String> callRestApiWikipediaImage(String search) {
 
-        Gson gson = new GsonBuilder()
+        gson = new GsonBuilder()
                 .setLenient()
                 .create();
 
@@ -373,7 +434,6 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
                 for(int i=0;i<rue.length;i++){
                     rue[i] = rue[i].substring(rue[i].indexOf(":")+1);
                     rue[i] = rue[i].replace("\"","");
-                    //nomsRue.add(rue[i]);
                     if(!hashNomRue.containsValue(rue[i])){
                         hashNomRue.put(weight+i,rue[i]);
                     }else{
@@ -399,7 +459,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
     private Call<String> callBingApi(String bingUrl) {
 
-        Gson gson = new GsonBuilder()
+        gson = new GsonBuilder()
                 .setLenient()
                 .create();
 
@@ -420,7 +480,25 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
         swipeContainer.setRefreshing(false);
 
-        new Chargement().execute();
+        assert connectivityManager != null;
+        if(Objects.requireNonNull(connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE)).getState() == NetworkInfo.State.CONNECTED ||
+                Objects.requireNonNull(connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI)).getState() == NetworkInfo.State.CONNECTED){
+            //There is a connexion
+
+            new Chargement().execute();
+
+        }else{
+            //There isn't a connexion
+
+            infoRues = getDataFromCache();
+
+            if(infoRues != null){
+                showList(infoRues);
+            }else{
+                Toast.makeText(this, "Veuillez vous connecter pour la première utilisation", Toast.LENGTH_SHORT).show();
+            }
+
+        }
 
     }
 
@@ -491,7 +569,6 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
         if(!getGPSlocation){
             getGPSlocation = true;
 
-            //A way to wait the GPS Location and not do the Bing API call without location
             try {
                 TimeUnit.MILLISECONDS.sleep(400);
             } catch (InterruptedException e) {
@@ -529,7 +606,16 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
         String stringLong;
         int weight;
 
-       if(Lat.toString().length()-Lat.toString().indexOf(".")+1<5){
+        //A way to wait the GPS Location and not do the Bing API call without location
+        while (Lat==null && Long==null){
+            try {
+                TimeUnit.MILLISECONDS.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if(Lat.toString().length()-Lat.toString().indexOf(".")+1<5){
             Lat += 0.00001;
         }
         Lat = Double.parseDouble(Lat.toString().substring(0,Lat.toString().indexOf(".")+6));
@@ -565,17 +651,14 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
-        Log.d("Latitude","status");
     }
 
     @Override
     public void onProviderEnabled(String provider) {
-        Log.d("Latitude","enable");
     }
 
     @Override
     public void onProviderDisabled(String provider) {
-        Log.d("Latitude","disable");
     }
 
 
@@ -619,6 +702,7 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
             outAnimation.setDuration(200);
             progressBarHolder.setAnimation(outAnimation);
             progressBarHolder.setVisibility(View.GONE);
+            saveList(infoRues);
             showList(infoRues);
             recyclerView.setVisibility(View.VISIBLE);
             recyclerView.setEnabled(true);
@@ -670,4 +754,5 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
         }
     }
+
 }

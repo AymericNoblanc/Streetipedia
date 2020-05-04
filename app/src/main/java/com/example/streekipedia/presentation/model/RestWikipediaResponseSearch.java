@@ -1,4 +1,4 @@
-package com.example.streekipedia;
+package com.example.streekipedia.presentation.model;
 
 public class RestWikipediaResponseSearch {
 
@@ -8,7 +8,7 @@ public class RestWikipediaResponseSearch {
         this.query = query;
     }
 
-    ResultsWikiSearch getQuery() {
+    public ResultsWikiSearch getQuery() {
         return query;
     }
 }

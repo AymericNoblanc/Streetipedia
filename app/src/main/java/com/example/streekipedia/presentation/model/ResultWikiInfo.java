@@ -1,4 +1,4 @@
-package com.example.streekipedia;
+package com.example.streekipedia.presentation.model;
 
 import java.io.Serializable;
 
@@ -10,7 +10,7 @@ public class ResultWikiInfo implements Serializable {
         this.extract = extract;
     }
 
-    String getExtract() {
+    public String getExtract() {
         return extract;
     }
 }

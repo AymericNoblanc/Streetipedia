@@ -1,4 +1,4 @@
-package com.example.streekipedia;
+package com.example.streekipedia.presentation.view;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,6 +11,8 @@ import org.jsoup.Jsoup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.streekipedia.R;
+import com.example.streekipedia.presentation.model.Rue;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -48,7 +50,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder>{
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    ListAdapter(List<Rue> myDataset, SelectedPage selectedPage) {
+    public ListAdapter(List<Rue> myDataset, SelectedPage selectedPage) {
         values = myDataset;
         this.selectedPage = selectedPage;
     }
