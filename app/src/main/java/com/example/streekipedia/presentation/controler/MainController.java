@@ -59,7 +59,6 @@ public class MainController {
 
     private boolean getGPSlocation;
 
-    private SwipeRefreshLayout swipeContainer;
     private ResultsWikiSearch results;
     private ResultsWikiInfo resultsInfo;
 
@@ -79,20 +78,16 @@ public class MainController {
     private static final String BASE_URL = "https://fr.wikipedia.org/w/";
     private static final String BASE_BING_URL = "http://dev.virtualearth.net/REST/v1/Locations/";
 
-    private ImageButton reglageButton;
+    //private ImageButton reglageButton;
 
     private ConstraintLayout layout;
     private boolean reglage = false;
-
-    private SeekBar seekBar;
 
     private int pas=2;
     private int oldPas = pas;
     private int surface=1;
 
     private int oldValue;
-
-    private ConnectivityManager connectivityManager;
 
     private SharedPreferences sharedPreferences;
 
@@ -107,9 +102,25 @@ public class MainController {
     }
 
     public void onStart(){
+
         layout = view.layout;
 
-        reglageButton = view.reglageButton;
+        reglageButtonInitialiser(view.reglageButton);
+
+        oldValue=1;
+
+        seekBarInitialiser(view.seekBar);
+
+        getGPSlocation = false;
+
+        locationManager = (LocationManager) view.getSystemService(Context.LOCATION_SERVICE);
+
+        launch((ConnectivityManager) Objects.requireNonNull(view.getSystemService(Context.CONNECTIVITY_SERVICE)));
+
+        swipeContainerInitialiser(view.swipeContainer);
+    }
+
+    private void reglageButtonInitialiser(ImageButton reglageButton){
         reglageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -120,15 +131,14 @@ public class MainController {
                     reglage=false;
                 }else{
                     view.constraintSetReglage.applyTo(layout);
-                    seekBar.setEnabled(true);
+                    view.seekBar.setEnabled(true);
                     reglage=true;
                 }
             }
         });
+    }
 
-        oldValue=1;
-
-        seekBar = view.seekBar;
+    private void seekBarInitialiser(SeekBar seekBar){
         seekBar.setProgress(0);
         seekBar.incrementProgressBy(1);
         seekBar.setMax(4);
@@ -188,13 +198,9 @@ public class MainController {
 
             }
         });
+    }
 
-        getGPSlocation = false;
-
-        locationManager = (LocationManager) view.getSystemService(Context.LOCATION_SERVICE);
-
-        connectivityManager = (ConnectivityManager) view.getSystemService(Context.CONNECTIVITY_SERVICE);
-
+    private void launch(ConnectivityManager connectivityManager){
         assert connectivityManager != null;
         if(Objects.requireNonNull(connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE)).getState() == NetworkInfo.State.CONNECTED ||
                 Objects.requireNonNull(connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI)).getState() == NetworkInfo.State.CONNECTED){
@@ -214,15 +220,15 @@ public class MainController {
             }
 
         }
+    }
 
-        // Lookup the swipe container view
-        swipeContainer = view.swipeContainer;
+    private void swipeContainerInitialiser(SwipeRefreshLayout swipeContainer){
         // Setup refresh listener which triggers new data loading
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 refresh();
-                oldValue=seekBar.getProgress();
+                oldValue=view.seekBar.getProgress();
             }
         });
         // Configure the refreshing colors
@@ -236,27 +242,9 @@ public class MainController {
 
         getGPSlocation = false;
 
-        swipeContainer.setRefreshing(false);
+        view.swipeContainer.setRefreshing(false);
 
-        assert connectivityManager != null;
-        if(Objects.requireNonNull(connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE)).getState() == NetworkInfo.State.CONNECTED ||
-                Objects.requireNonNull(connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI)).getState() == NetworkInfo.State.CONNECTED){
-            //There is a connexion
-
-            new Chargement().execute();
-
-        }else{
-            //There isn't a connexion
-
-            infoRues = getDataFromCache();
-
-            if(infoRues != null){
-                view.showList(infoRues);
-            }else{
-                Toast.makeText(view, "Veuillez vous connecter pour la première utilisation", Toast.LENGTH_SHORT).show();
-            }
-
-        }
+        launch((ConnectivityManager) Objects.requireNonNull(view.getSystemService(Context.CONNECTIVITY_SERVICE)));
 
     }
 
@@ -332,28 +320,33 @@ public class MainController {
         Call<String> call = callRestApiWikipediaImage(search);
         try{
             url = call.execute().body();
-            assert url != null;
-            if(url.contains("https://upload.wikimedia.org")) {
-                url = url.substring(url.indexOf("https://upload.wikimedia.org"));
-                url = url.substring(0,url.indexOf("\""));
-                url2 = url;
-                if(!(url2.contains("svg"))){
-                    if(url2.contains("jpg")){
-                        url2 = url2.replace("/thumb", "");
-                        url2 = url2.substring(0, url.indexOf(".jpg")-6);
-                        url2 = url2.concat(".jpg");
-                    }else if(url2.contains("png")){
-                        url2 = url2.replace("/thumb", "");
-                        url2 = url2.substring(0, url.indexOf(".png")-6);
-                        url2 = url2.concat(".png");
-                    }
-                }
-            }else{
-                url=null;
-                url2=null;
-            }
+            createUrl();
+
         }catch(IOException e){
             Toast.makeText(view, "error", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void createUrl(){
+        assert url != null;
+        if(url.contains("https://upload.wikimedia.org")) {
+            url = url.substring(url.indexOf("https://upload.wikimedia.org"));
+            url = url.substring(0,url.indexOf("\""));
+            url2 = url;
+            if(!(url2.contains("svg"))){
+                if(url2.contains("jpg")){
+                    url2 = url2.replace("/thumb", "");
+                    url2 = url2.substring(0, url.indexOf(".jpg")-6);
+                    url2 = url2.concat(".jpg");
+                }else if(url2.contains("png")){
+                    url2 = url2.replace("/thumb", "");
+                    url2 = url2.substring(0, url.indexOf(".png")-6);
+                    url2 = url2.concat(".png");
+                }
+            }
+        }else{
+            url=null;
+            url2=null;
         }
     }
 
@@ -374,41 +367,44 @@ public class MainController {
 
         Call<String> call = callBingApi("http://dev.virtualearth.net/REST/v1/Locations/" + latitudeVar + "," +  longitudeVar + "?o=json&incl=ciso2&key=AsKDhGrY05ocf_6ajFmtLjPfnPI1MxXFALXyVw9kRNrsDlSmEygCllcwizQbnUuS");
         try{
-            String test = call.execute().body();
-            assert test != null;
-            if(test.contains("baseStreet")){
-                test = test.substring(test.indexOf("baseStreet"));
-                test = test.substring(0, test.indexOf("intersectionType")-3);
-
-                String[] rue = test.split(",");
-
-                while(hashNomRue.containsKey(weight)){
-                    weight++;
-                }
-
-                for(int i=0;i<rue.length;i++){
-                    rue[i] = rue[i].substring(rue[i].indexOf(":")+1);
-                    rue[i] = rue[i].replace("\"","");
-                    if(!hashNomRue.containsValue(rue[i])){
-                        hashNomRue.put(weight+i,rue[i]);
-                    }else{
-                        String set = String.valueOf(hashNomRue.entrySet());
-                        set = set.substring(0, set.indexOf(rue[i])-1);
-                        if(set.contains(" ")){
-                            set = set.substring(set.lastIndexOf(" ")+1);
-                        }else{
-                            set = set.substring(1);
-                        }
-                        if(Integer.parseInt(set)>weight+i){
-                            hashNomRue.put(weight+i,rue[i]);
-                            hashNomRue.remove(Integer.parseInt(set));
-                        }
-                    }
-                }
-            }
+            createListNomRue(Objects.requireNonNull(call.execute().body()), weight);
 
         }catch(IOException e){
             Toast.makeText(view, "error", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void createListNomRue(String response,Integer weight){
+        assert response != null;
+        if(response.contains("baseStreet")){
+            response = response.substring(response.indexOf("baseStreet"));
+            response = response.substring(0, response.indexOf("intersectionType")-3);
+
+            String[] rue = response.split(",");
+
+            while(hashNomRue.containsKey(weight)){
+                weight++;
+            }
+
+            for(int i=0;i<rue.length;i++){
+                rue[i] = rue[i].substring(rue[i].indexOf(":")+1);
+                rue[i] = rue[i].replace("\"","");
+                if(!hashNomRue.containsValue(rue[i])){
+                    hashNomRue.put(weight+i,rue[i]);
+                }else{
+                    String set = String.valueOf(hashNomRue.entrySet());
+                    set = set.substring(0, set.indexOf(rue[i])-1);
+                    if(set.contains(" ")){
+                        set = set.substring(set.lastIndexOf(" ")+1);
+                    }else{
+                        set = set.substring(1);
+                    }
+                    if(Integer.parseInt(set)>weight+i){
+                        hashNomRue.put(weight+i,rue[i]);
+                        hashNomRue.remove(Integer.parseInt(set));
+                    }
+                }
+            }
         }
     }
 
@@ -430,58 +426,61 @@ public class MainController {
         infoRues.clear();
 
         for(int i=0; i<nomsRue.size(); i++){
-            Rue newRue = new Rue();
-
-            newRue.setNomRue(nomsRue.get(i));
-
-            String titre = nomsRue.get(i);
-            for(int j=0; j<listTypeVoie.size();j++){
-                titre = titre.replace(listTypeVoie.get(j), "");
-            }
-            if(titre.startsWith("du")){
-                titre = titre.replaceFirst("du ", "");
-            }
-            if(titre.startsWith("d'")){
-                titre = titre.replaceFirst("d'", "");
-            }
-            if(titre.startsWith("de la")){
-                titre = titre.replaceFirst("de la ", "");
-            }
-            if(titre.startsWith("de l'")){
-                titre = titre.replaceFirst("de l'", "");
-            }
-            if(titre.startsWith("des")){
-                titre = titre.replaceFirst("des ", "");
-            }
-            if(titre.startsWith("de")){
-                titre = titre.replaceFirst("de ", "");
-            }
-            newRue.setTitre(titre);
-
-            makeAPICallSearch(newRue.getTitre());
-
-            newRue.setPageId(results.getSearch().get(0).getPageid());
-
-            makeAPICallInfo(Integer.toString(newRue.getPageId()));
-            newRue.setDescription(resultsInfo.getPages().get(0).getExtract());
-
-            newRue.setSnippet(newRue.getDescription().substring(0,300));
-
-            makeAPICallImage(Integer.toString(newRue.getPageId()));
-            newRue.setThumbnail(url);
-
-            newRue.setImage(url2);
-
-            if(i==0){
-                newRue.setNomRue(newRue.getNomRue()+"*");
-            }
-
-            infoRues.add(newRue);
+            ajoutOneRue(i, nomsRue);
         }
-
     }
 
-    private void chargement() {
+    private void ajoutOneRue(int i, List<String> nomsRue){
+        Rue newRue = new Rue();
+
+        newRue.setNomRue(nomsRue.get(i));
+
+        String titre = nomsRue.get(i);
+        for(int j=0; j<listTypeVoie.size();j++){
+            titre = titre.replace(listTypeVoie.get(j), "");
+        }
+        if(titre.startsWith("du")){
+            titre = titre.replaceFirst("du ", "");
+        }
+        if(titre.startsWith("d'")){
+            titre = titre.replaceFirst("d'", "");
+        }
+        if(titre.startsWith("de la")){
+            titre = titre.replaceFirst("de la ", "");
+        }
+        if(titre.startsWith("de l'")){
+            titre = titre.replaceFirst("de l'", "");
+        }
+        if(titre.startsWith("des")){
+            titre = titre.replaceFirst("des ", "");
+        }
+        if(titre.startsWith("de")){
+            titre = titre.replaceFirst("de ", "");
+        }
+        newRue.setTitre(titre);
+
+        makeAPICallSearch(newRue.getTitre());
+
+        newRue.setPageId(results.getSearch().get(0).getPageid());
+
+        makeAPICallInfo(Integer.toString(newRue.getPageId()));
+        newRue.setDescription(resultsInfo.getPages().get(0).getExtract());
+
+        newRue.setSnippet(newRue.getDescription().substring(0,300));
+
+        makeAPICallImage(Integer.toString(newRue.getPageId()));
+        newRue.setThumbnail(url);
+
+        newRue.setImage(url2);
+
+        if(i==0){
+            newRue.setNomRue(newRue.getNomRue()+"*");
+        }
+
+        infoRues.add(newRue);
+    }
+
+    private void chargement(){
         if(!getGPSlocation){
             getGPSlocation = true;
 
@@ -514,10 +513,33 @@ public class MainController {
         double latDist = 0.00045*pas;//50m * le pas
         double longDist = 0.00075*pas;//50m * le pas
 
-        String stringLat;
-        String stringLong;
-        int weight;
+        waitLocationListener();
 
+        formatGPSLocation();
+
+        Lat -= distanceMax * latDist;
+        Long -= distanceMax * longDist;
+
+        for(int i=0;i<distanceMax*2+1;i++){
+            for(int j=0;j<distanceMax*2+1;j++){
+                if(Double.toString(Lat+(i*latDist)).length()-Double.toString(Lat+(i*latDist)).indexOf(".")+1<5){
+                    Lat += 0.00001;
+                }
+                if(Double.toString(Long+(j*longDist)).length()-Double.toString(Long+(j*longDist)).indexOf(".")+1<5){
+                    Long += 0.00001;
+                }
+
+                String stringLat = Double.toString(Lat+(i*latDist));
+                String stringLong = Double.toString(Long+(j*longDist));
+                int weight = (int) (Math.sqrt(((i-distanceMax)*(i-distanceMax))+((j-distanceMax)*(j-distanceMax)))*1000);
+                makeBingAPICall(stringLat, stringLong, weight);
+            }
+        }
+
+        listNomRue.putAll(hashNomRue);
+    }
+
+    private void waitLocationListener(){
         //A way to wait the GPS Location and not do the Bing API call without location
         while (Lat==null && Long==null){
             try {
@@ -526,40 +548,20 @@ public class MainController {
                 e.printStackTrace();
             }
         }
+    }
 
+    private void formatGPSLocation(){
         assert Lat != null;
         if(Lat.toString().length()-Lat.toString().indexOf(".")+1<5){
             Lat += 0.00001;
         }
         Lat = Double.parseDouble(Lat.toString().substring(0,Lat.toString().indexOf(".")+6));
 
+        assert Long != null;
         if(Long.toString().length()-Long.toString().indexOf(".")+1<5){
             Long += 0.00001;
         }
         Long = Double.parseDouble(Long.toString().substring(0,Long.toString().indexOf(".")+6));
-
-
-        Lat -= distanceMax * latDist;
-        Long -= distanceMax * longDist;
-
-        for(int i=0;i<distanceMax*2+1;i++){
-            for(int j=0;j<distanceMax*2+1;j++){
-
-                if(Double.toString(Lat+(i*latDist)).length()-Double.toString(Lat+(i*latDist)).indexOf(".")+1<5){
-                    Lat += 0.00001;
-                }
-                if(Double.toString(Long+(j*longDist)).length()-Double.toString(Long+(j*longDist)).indexOf(".")+1<5){
-                    Long += 0.00001;
-                }
-
-                stringLat = Double.toString(Lat+(i*latDist));
-                stringLong = Double.toString(Long+(j*longDist));
-                weight = (int) (Math.sqrt(((i-distanceMax)*(i-distanceMax))+((j-distanceMax)*(j-distanceMax)))*1000);
-                makeBingAPICall(stringLat, stringLong, weight);
-            }
-        }
-
-        listNomRue.putAll(hashNomRue);
     }
 
     @SuppressLint("StaticFieldLeak")
@@ -568,27 +570,15 @@ public class MainController {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            view.recyclerView.setEnabled(false);
-            view.recyclerView.setVisibility(View.GONE);
-            reglageButton.setEnabled(false);
-            reglageButton.setVisibility(View.GONE);
-            view.rapiditeTV.setEnabled(false);
-            view.rapiditeTV.setVisibility(View.INVISIBLE);
-            view.quantiteTV.setEnabled(false);
-            view.quantiteTV.setVisibility(View.INVISIBLE);
-            view.surfaceTV.setEnabled(false);
-            view.surfaceTV.setVisibility(View.INVISIBLE);
-            view.pasTV.setEnabled(false);
-            view.pasTV.setVisibility(View.INVISIBLE);
-            view.rectangle.setEnabled(false);
-            view.rectangle.setVisibility(View.INVISIBLE);
-            seekBar.setEnabled(false);
-            seekBar.setVisibility(View.INVISIBLE);
-            view.recyclerViewStatue=false;
+
+            onPreExecuteViewChange();
+
             AlphaAnimation inAnimation = new AlphaAnimation(0f, 1f);
             inAnimation.setDuration(200);
+
             view.progressBarHolder.setAnimation(inAnimation);
             view.progressBarHolder.setVisibility(View.VISIBLE);
+
             if (ActivityCompat.checkSelfPermission(view.getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) !=
                     PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(view.getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 return;
@@ -599,16 +589,50 @@ public class MainController {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
+
             AlphaAnimation outAnimation = new AlphaAnimation(1f, 0f);
             outAnimation.setDuration(200);
+
             view.progressBarHolder.setAnimation(outAnimation);
             view.progressBarHolder.setVisibility(View.GONE);
+
             saveList(infoRues);
             view.showList(infoRues);
+
+            onPostExecuteViewChange();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            chargement();
+            return null;
+        }
+
+        private void onPreExecuteViewChange(){
+            view.recyclerView.setEnabled(false);
+            view.recyclerView.setVisibility(View.GONE);
+            view.reglageButton.setEnabled(false);
+            view.reglageButton.setVisibility(View.GONE);
+            view.rapiditeTV.setEnabled(false);
+            view.rapiditeTV.setVisibility(View.INVISIBLE);
+            view.quantiteTV.setEnabled(false);
+            view.quantiteTV.setVisibility(View.INVISIBLE);
+            view.surfaceTV.setEnabled(false);
+            view.surfaceTV.setVisibility(View.INVISIBLE);
+            view.pasTV.setEnabled(false);
+            view.pasTV.setVisibility(View.INVISIBLE);
+            view.rectangle.setEnabled(false);
+            view.rectangle.setVisibility(View.INVISIBLE);
+            view.seekBar.setEnabled(false);
+            view.seekBar.setVisibility(View.INVISIBLE);
+            view.recyclerViewStatue=false;
+        }
+
+        private void onPostExecuteViewChange(){
             view.recyclerView.setVisibility(View.VISIBLE);
             view.recyclerView.setEnabled(true);
-            reglageButton.setVisibility(View.VISIBLE);
-            reglageButton.setEnabled(true);
+            view.reglageButton.setVisibility(View.VISIBLE);
+            view.reglageButton.setEnabled(true);
             if(reglage) {
                 view.rapiditeTV.setEnabled(true);
                 view.rapiditeTV.setVisibility(View.VISIBLE);
@@ -620,15 +644,9 @@ public class MainController {
                 view.pasTV.setVisibility(View.VISIBLE);
                 view.rectangle.setEnabled(true);
                 view.rectangle.setVisibility(View.VISIBLE);
-                seekBar.setEnabled(true);
-                seekBar.setVisibility(View.VISIBLE);
+                view.seekBar.setEnabled(true);
+                view.seekBar.setVisibility(View.VISIBLE);
             }
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            chargement();
-            return null;
         }
 
         @Override
