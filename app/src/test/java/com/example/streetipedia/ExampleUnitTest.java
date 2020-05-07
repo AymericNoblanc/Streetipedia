@@ -1,4 +1,4 @@
-package com.example.streekipedia;
+package com.example.streetipedia;
 
 import org.junit.Test;
 

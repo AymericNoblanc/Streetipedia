@@ -1,4 +1,4 @@
-package com.example.streekipedia.presentation.view;
+package com.example.streetipedia.presentation.view;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -17,13 +17,13 @@ import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.example.streekipedia.R;
-import com.example.streekipedia.presentation.controler.MainController;
-import com.example.streekipedia.presentation.model.Rue;
+import com.example.streetipedia.R;
+import com.example.streetipedia.Singletons;
+import com.example.streetipedia.presentation.controler.MainController;
+import com.example.streetipedia.presentation.model.Rue;
 import com.google.gson.GsonBuilder;
 
 import java.util.List;
-
 
 public class MainActivity extends AppCompatActivity implements ListAdapter.SelectedPage{
 
@@ -60,9 +60,8 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
         declarationLayout();
 
-        MainController mainController = new MainController(this, new GsonBuilder()
-                .setLenient()
-                .create(), getSharedPreferences("sharePreference", Context.MODE_PRIVATE));
+        MainController mainController = new MainController(this, Singletons.getGson(),
+                getSharedPreferences("sharePreference", Context.MODE_PRIVATE));
         mainController.onStart();
 
         recyclerViewStatue = false;
@@ -95,11 +94,10 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
         RecyclerView recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setHasFixedSize(true);
-        // use a linear layout manager
+
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
 
-        // define an adapter
         ListAdapter mAdapter = new ListAdapter(rueList, this);
         recyclerView.setAdapter(mAdapter);
 

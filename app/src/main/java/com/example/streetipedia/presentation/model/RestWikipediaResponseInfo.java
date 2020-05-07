@@ -1,4 +1,4 @@
-package com.example.streekipedia.presentation.model;
+package com.example.streetipedia.presentation.model;
 
 public class RestWikipediaResponseInfo {
 

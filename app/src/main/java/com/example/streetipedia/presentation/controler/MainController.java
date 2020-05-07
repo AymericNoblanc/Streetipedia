@@ -1,4 +1,4 @@
-package com.example.streekipedia.presentation.controler;
+package com.example.streetipedia.presentation.controler;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -23,16 +23,13 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import com.example.streekipedia.data.BingMapsApi;
-import com.example.streekipedia.data.WikipediaApiImage;
-import com.example.streekipedia.data.WikipediaApiInfo;
-import com.example.streekipedia.data.WikipediaApiSearch;
-import com.example.streekipedia.presentation.model.RestWikipediaResponseInfo;
-import com.example.streekipedia.presentation.model.RestWikipediaResponseSearch;
-import com.example.streekipedia.presentation.model.ResultsWikiInfo;
-import com.example.streekipedia.presentation.model.ResultsWikiSearch;
-import com.example.streekipedia.presentation.model.Rue;
-import com.example.streekipedia.presentation.view.MainActivity;
+import com.example.streetipedia.Singletons;
+import com.example.streetipedia.presentation.model.RestWikipediaResponseInfo;
+import com.example.streetipedia.presentation.model.RestWikipediaResponseSearch;
+import com.example.streetipedia.presentation.model.ResultsWikiInfo;
+import com.example.streetipedia.presentation.model.ResultsWikiSearch;
+import com.example.streetipedia.presentation.model.Rue;
+import com.example.streetipedia.presentation.view.MainActivity;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -48,9 +45,6 @@ import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 import retrofit2.Call;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
-import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 public class MainController {
 
@@ -76,9 +70,6 @@ public class MainController {
             "Square ", "Terre-Plein ", "Terrasse ", "Traverse ", "Villa ", "Village ");
 
     private static final String BASE_URL = "https://fr.wikipedia.org/w/";
-    private static final String BASE_BING_URL = "http://dev.virtualearth.net/REST/v1/Locations/";
-
-    //private ImageButton reglageButton;
 
     private ConstraintLayout layout;
     private boolean reglage = false;
@@ -271,7 +262,7 @@ public class MainController {
     }
 
     private void makeAPICallSearch(String search){
-        Call<RestWikipediaResponseSearch> call = callRestApiWikipediaSearch(search);
+        Call<RestWikipediaResponseSearch> call = Singletons.getWikipediaApiSearch().getWikipediaResponseSearch("query", "1", "classic","snippet", "search", search, "", "json");
         try{
             results = Objects.requireNonNull(call.execute().body()).getQuery();
         }catch(IOException e){
@@ -279,22 +270,9 @@ public class MainController {
         }
     }
 
-    private Call<RestWikipediaResponseSearch> callRestApiWikipediaSearch(String search) {
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .build();
-
-        WikipediaApiSearch WikipediaApi = retrofit.create(WikipediaApiSearch.class);
-
-        return WikipediaApi.getWikipediaResponse("query", "1", "classic","snippet", "search", search, "", "json");
-
-    }
-
     private void makeAPICallInfo(String search){
 
-        Call<RestWikipediaResponseInfo> call = callRestApiWikipediaInfo(search);
+        Call<RestWikipediaResponseInfo> call = Singletons.getWikipediaApiInfo().getWikipediaResponseInfo("query", "extracts", "1", search, "1", "2", "json");
         try{
             resultsInfo = Objects.requireNonNull(call.execute().body()).getQuery();
         }catch(IOException e){
@@ -302,22 +280,9 @@ public class MainController {
         }
     }
 
-    private Call<RestWikipediaResponseInfo> callRestApiWikipediaInfo(String search) {
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .build();
-
-        WikipediaApiInfo wikipediaApi2 = retrofit.create(WikipediaApiInfo.class);
-
-        return wikipediaApi2.getWikipediaResponse2("query", "extracts", "1", search, "1", "2", "json");
-
-    }
-
     private void makeAPICallImage(String search){
 
-        Call<String> call = callRestApiWikipediaImage(search);
+        Call<String> call = Singletons.getWikipediaApiImage().getWikipediaResponseImage("query", search, "json", "pageimages");
         try{
             url = call.execute().body();
             createUrl();
@@ -350,22 +315,9 @@ public class MainController {
         }
     }
 
-    private Call<String> callRestApiWikipediaImage(String search) {
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .addConverterFactory(ScalarsConverterFactory.create())
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .build();
-
-        WikipediaApiImage WikipediaApi = retrofit.create(WikipediaApiImage.class);
-
-        return WikipediaApi.getWikipediaResponseImage("query", search, "json", "pageimages");
-    }
-
     private void makeBingAPICall(String latitudeVar, String longitudeVar, Integer weight){
 
-        Call<String> call = callBingApi("http://dev.virtualearth.net/REST/v1/Locations/" + latitudeVar + "," +  longitudeVar + "?o=json&incl=ciso2&key=AsKDhGrY05ocf_6ajFmtLjPfnPI1MxXFALXyVw9kRNrsDlSmEygCllcwizQbnUuS");
+        Call<String> call = Singletons.getBingMapsApi().getBingMapsResponse("http://dev.virtualearth.net/REST/v1/Locations/" + latitudeVar + "," +  longitudeVar + "?o=json&incl=ciso2&key=AsKDhGrY05ocf_6ajFmtLjPfnPI1MxXFALXyVw9kRNrsDlSmEygCllcwizQbnUuS");
         try{
             createListNomRue(Objects.requireNonNull(call.execute().body()), weight);
 
@@ -406,19 +358,6 @@ public class MainController {
                 }
             }
         }
-    }
-
-    private Call<String> callBingApi(String bingUrl) {
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(BASE_BING_URL)
-                .addConverterFactory(ScalarsConverterFactory.create())
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .build();
-
-        BingMapsApi bingApi = retrofit.create(BingMapsApi.class);
-
-        return bingApi.getBingMapsResponse(bingUrl);
     }
 
     private void createListRue(List<String> nomsRue){
