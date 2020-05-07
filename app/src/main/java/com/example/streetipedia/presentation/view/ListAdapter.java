@@ -17,6 +17,7 @@ import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
+//Class that fill and show the recyclerview
 public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder>{
     private List<Rue> values;
 
@@ -35,10 +36,11 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder>{
         ViewHolder(View v) {
             super(v);
             layout = v;
-            txtHeader = v.findViewById(R.id.firstLine);
-            txtFooter = v.findViewById(R.id.secondLine);
-            Image = v.findViewById(R.id.icon);
+            txtHeader = v.findViewById(R.id.firstLine);//Identify the main textView
+            txtFooter = v.findViewById(R.id.secondLine);//Identify the other textView
+            Image = v.findViewById(R.id.icon);//Identify the image
 
+            //On Click Listener for go to another activity
             v.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -51,7 +53,7 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder>{
 
     // Provide a suitable constructor (depends on the kind of dataset)
     ListAdapter(List<Rue> myDataset, SelectedPage selectedPage) {
-        values = myDataset;
+        values = myDataset; //data given ( the List with all Street)
         this.selectedPage = selectedPage;
     }
 
@@ -74,32 +76,34 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder>{
     public void onBindViewHolder(@NonNull ViewHolder holder, final int position) {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
-        final Rue name = values.get(position);
+        final Rue name = values.get(position); //Get just the street interesting
 
-        //makeAPICallImage(Integer.toString(name.getPageid()));
-
+        //If the name of the street have a thumbnail on wikipedia show if else show a no view picture
         if(name.getThumbnail()!=null){
             Picasso.get().load(name.getThumbnail()).into(holder.Image);
         }else{
             holder.Image.setImageResource(R.drawable.ic_visibility_off_black_24dp);
         }
 
+        //Show the first result (most probably the current street of the user) yellow
+        //DIDN'T WORK (for any strange reason)
         if(name.getNomRue().endsWith("*")){
             holder.layout.setBackgroundResource(R.color.firstResultColor);
             name.setNomRue(name.getNomRue().substring(0,name.getNomRue().indexOf("*")));
         }
-        holder.txtHeader.setText(name.getNomRue());
+        holder.txtHeader.setText(name.getNomRue()); //Write the name of the street in the main textView
 
-        String text = Jsoup.parse(name.getSnippet()).text();
-        holder.txtFooter.setText(text);
+        String text = Jsoup.parse(name.getSnippet()).text(); //Delete html tag of the text
+        holder.txtFooter.setText(text); //Write the snippet (or small description) of the street in the second textView
     }
 
     // Return the size of your dataset (invoked by the layout manager)
     @Override
     public int getItemCount() {
         return values.size();
-    }
+    }//Method obligatory
 
+    //Method for prepare the second activity
     public interface SelectedPage{
         void selectedPage (Rue result);
     }

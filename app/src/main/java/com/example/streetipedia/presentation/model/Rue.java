@@ -2,6 +2,7 @@ package com.example.streetipedia.presentation.model;
 
 import java.io.Serializable;
 
+//Class that create a street with all  properties
 public class Rue implements Serializable {
 
     private String nomRue;

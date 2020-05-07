@@ -14,8 +14,8 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
 
+//Class that manage some singletons
 public class Singletons {
-    //J'ai pas eu la flemme de renommer la classe ;-)
 
     private static Gson gsonInstance;
     private static SharedPreferences sharedPreferencesInstance;
@@ -24,6 +24,7 @@ public class Singletons {
     private static WikipediaApiInfo wikipediaApiInfoInstance;
     private static WikipediaApiSearch wikipediaApiSearchInstance;
 
+    //Gson Singleton
     public static Gson getGson(){
         if(gsonInstance == null){
             gsonInstance = new GsonBuilder()
@@ -33,6 +34,7 @@ public class Singletons {
         return gsonInstance;
     }
 
+    //SharedPreferences Singleton
     public static SharedPreferences getSharedPreferences(Context context){
         if(sharedPreferencesInstance == null){
             sharedPreferencesInstance = context.getSharedPreferences("sharePreference", Context.MODE_PRIVATE);
@@ -40,6 +42,7 @@ public class Singletons {
         return sharedPreferencesInstance;
     }
 
+    //BingMapsApi Singleton
     public static BingMapsApi getBingMapsApi(){
         if(bingMapsApiInstance==null){
             Retrofit retrofit = new Retrofit.Builder()
@@ -54,6 +57,7 @@ public class Singletons {
         return bingMapsApiInstance;
     }
 
+    //WikipediaApiImage Singleton
     public static WikipediaApiImage getWikipediaApiImage(){
         if(wikipediaApiImageInstance==null){
             Retrofit retrofit = new Retrofit.Builder()
@@ -68,6 +72,7 @@ public class Singletons {
         return wikipediaApiImageInstance;
     }
 
+    //WikipediaApiInfo Singleton
     public static WikipediaApiInfo getWikipediaApiInfo(){
         if(wikipediaApiInfoInstance==null){
             Retrofit retrofit = new Retrofit.Builder()
@@ -82,6 +87,7 @@ public class Singletons {
         return wikipediaApiInfoInstance;
     }
 
+    //WikipediaApiSearch Singleton
     public static WikipediaApiSearch getWikipediaApiSearch(){
         if(wikipediaApiSearchInstance==null){
             Retrofit retrofit = new Retrofit.Builder()

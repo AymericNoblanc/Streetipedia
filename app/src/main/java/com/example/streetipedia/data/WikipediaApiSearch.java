@@ -6,8 +6,8 @@ import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
 
+//Interface that create a call for Wikipedia search API : https://www.mediawiki.org/wiki/API:Search
 public interface WikipediaApiSearch {
-
     @GET("api.php")
     Call<RestWikipediaResponseSearch> getWikipediaResponseSearch(@Query("action") String one, @Query("srlimit") String srlimit, @Query("srqiprofile") String srqiprofile, @Query("srprop") String srprop, @Query("list") String two, @Query("srsearch") String three, @Query("utf8") String four, @Query("format") String five);
 }
