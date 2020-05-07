@@ -46,6 +46,7 @@ import java.util.concurrent.TimeUnit;
 
 import retrofit2.Call;
 
+//Class that control all the logical of the program
 public class MainController {
 
     private LocationManager locationManager;
