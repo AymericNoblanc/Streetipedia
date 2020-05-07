@@ -58,7 +58,8 @@
         app:layout_constraintHorizontal_bias="0.95"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.97" />
+        app:layout_constraintVertical_bias="0.97"
+        android:contentDescription="@string/button_reglage" />
 
     <View
         android:id="@+id/myRectangleView"
@@ -73,7 +74,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:text="Surface : Position"
+        android:text="@string/surface_100x100"
         android:textAlignment="center"
         android:textColor="#858585"
         android:textStyle="bold"
@@ -86,7 +87,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:text="Pas : 0m"
+        android:text="@string/pas_100m"
         android:textAlignment="center"
         android:textColor="#858585"
         android:textStyle="bold"
@@ -100,7 +101,7 @@
         android:layout_height="20dp"
         android:maxLines="2"
         android:singleLine="false"
-        android:text="Quantité"
+        android:text="@string/quantit"
         android:textAlignment="center"
         android:textColor="#858585"
         android:textStyle="bold"
@@ -129,7 +130,7 @@
         android:layout_height="20dp"
         android:maxLines="2"
         android:singleLine="false"
-        android:text="Rapidité"
+        android:text="@string/rapidit"
         android:textAlignment="center"
         android:textColor="#858585"
         android:textStyle="bold"

@@ -7,7 +7,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -21,7 +20,6 @@ import com.example.streetipedia.R;
 import com.example.streetipedia.Singletons;
 import com.example.streetipedia.presentation.controler.MainController;
 import com.example.streetipedia.presentation.model.Rue;
-import com.google.gson.GsonBuilder;
 
 import java.util.List;
 

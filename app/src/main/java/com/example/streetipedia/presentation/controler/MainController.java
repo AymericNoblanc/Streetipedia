@@ -69,8 +69,6 @@ public class MainController {
             "Place ", "Plaine ", "Plateau ", "Promenade ", "Parvis ", "Quartier ", "Quai ", "Résidence ", "Ruelle ", "Rocade ", "Rond-Point ", "Route ", "Rue ", "Sentier ",
             "Square ", "Terre-Plein ", "Terrasse ", "Traverse ", "Villa ", "Village ");
 
-    private static final String BASE_URL = "https://fr.wikipedia.org/w/";
-
     private ConstraintLayout layout;
     private boolean reglage = false;
 
