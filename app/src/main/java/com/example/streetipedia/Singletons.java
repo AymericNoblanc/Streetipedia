@@ -1,5 +1,8 @@
 package com.example.streetipedia;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+
 import com.example.streetipedia.data.BingMapsApi;
 import com.example.streetipedia.data.WikipediaApiImage;
 import com.example.streetipedia.data.WikipediaApiInfo;
@@ -15,6 +18,7 @@ public class Singletons {
     //J'ai pas eu la flemme de renommer la classe ;-)
 
     private static Gson gsonInstance;
+    private static SharedPreferences sharedPreferencesInstance;
     private static BingMapsApi bingMapsApiInstance;
     private static WikipediaApiImage wikipediaApiImageInstance;
     private static WikipediaApiInfo wikipediaApiInfoInstance;
@@ -27,6 +31,13 @@ public class Singletons {
                     .create();
         }
         return gsonInstance;
+    }
+
+    public static SharedPreferences getSharedPreferences(Context context){
+        if(sharedPreferencesInstance == null){
+            sharedPreferencesInstance = context.getSharedPreferences("sharePreference", Context.MODE_PRIVATE);
+        }
+        return sharedPreferencesInstance;
     }
 
     public static BingMapsApi getBingMapsApi(){

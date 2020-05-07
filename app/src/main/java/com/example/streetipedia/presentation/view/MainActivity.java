@@ -60,8 +60,11 @@ public class MainActivity extends AppCompatActivity implements ListAdapter.Selec
 
         declarationLayout();
 
-        MainController mainController = new MainController(this, Singletons.getGson(),
-                getSharedPreferences("sharePreference", Context.MODE_PRIVATE));
+        MainController mainController = new MainController(
+                this,
+                Singletons.getGson(),
+                Singletons.getSharedPreferences(getApplicationContext())
+        );
         mainController.onStart();
 
         recyclerViewStatue = false;
