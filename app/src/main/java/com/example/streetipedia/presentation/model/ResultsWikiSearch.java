@@ -1,4 +1,4 @@
-package com.example.streekipedia;
+package com.example.streetipedia.presentation.model;
 
 import java.util.List;
 
@@ -10,7 +10,7 @@ public class ResultsWikiSearch {
         this.search = search;
     }
 
-    List<ResultWikiSearch> getSearch() {
+    public List<ResultWikiSearch> getSearch() {
         return search;
     }
 }

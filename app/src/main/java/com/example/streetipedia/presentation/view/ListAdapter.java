@@ -1,4 +1,4 @@
-package com.example.streekipedia;
+package com.example.streetipedia.presentation.view;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,6 +11,8 @@ import org.jsoup.Jsoup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.streetipedia.R;
+import com.example.streetipedia.presentation.model.Rue;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;

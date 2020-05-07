@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".SelectedPageActivity">
+    tools:context=".presentation.view.SelectedPageActivity">
 
     <TextView
         android:id="@+id/selectedPageText"
@@ -44,7 +44,6 @@
         android:layout_width="145dp"
         android:layout_height="145dp"
         android:layout_marginStart="20dp"
-        android:onClick="animateImageView"
         app:layout_constraintBottom_toTopOf="@+id/selectedPageText"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -56,7 +55,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:onClick="browser1"
-        android:text="@string/search_the_wikipedia_page_online"
+        android:text="@string/ouvrir_la_page_wikipedia"
         android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

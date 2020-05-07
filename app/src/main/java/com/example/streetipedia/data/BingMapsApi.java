@@ -1,4 +1,4 @@
-package com.example.streekipedia;
+package com.example.streetipedia.data;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
