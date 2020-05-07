@@ -49,60 +49,78 @@ import retrofit2.Call;
 //Class that control all the logical of the program
 public class MainController {
 
+    //Variables that manage and get the position
     private LocationManager locationManager;
     private Double Lat, Long;
-
     private boolean getGPSlocation;
 
+    //Variables of class that receive API response
     private ResultsWikiSearch results;
     private ResultsWikiInfo resultsInfo;
 
+    //Variables that manage the url format
     private String url = null;
     private String url2 = null;
 
+    //It's the list use in showList to create the recycleView
     private List<Rue> infoRues = new ArrayList<>();
 
+    //This two list are use for sort the list of street by their distance of the user
     private Map<Integer, String> hashNomRue = new HashMap<>();
     private TreeMap<Integer, String> listNomRue = new TreeMap<>(hashNomRue);
 
-    private List<String> listTypeVoie = Arrays.asList("Allée ", "Avenue ", "Av. ", "Boulevard ", "Carrefour ", "Chemin ", "Chaussée ", "Cité ", "Corniche ", "Cours ", "Domaine ",
-            "Descente ", "Ecart ", "Esplanade ", "Faubourg ", "Grande Rue ", "Hameau ", "Halle ", "Impasse ", "Lieu-dit ", "Lottissement ", "Marché ", "Montée ", "Passage ", "Passerelle ",
-            "Place ", "Plaine ", "Plateau ", "Promenade ", "Parvis ", "Quartier ", "Quai ", "Résidence ", "Ruelle ", "Rocade ", "Rond-Point ", "Route ", "Rue ", "Sentier ",
-            "Square ", "Terre-Plein ", "Terrasse ", "Traverse ", "Villa ", "Village ");
+    //List of all type of street for delete this in the name street and have just the interesting part (just for the French language)
+    private List<String> listTypeVoie = Arrays.asList("Allée ", "Avenue ", "Av. ", "Boulevard ", "Carrefour ", "Chemin ", "Chaussée ",
+            "Cité ", "Corniche ", "Cours ", "Domaine ", "Descente ", "Ecart ", "Esplanade ", "Faubourg ", "Grande Rue ", "Hameau ",
+            "Halle ", "Impasse ", "Lieu-dit ", "Lottissement ", "Marché ", "Montée ", "Passage ", "Passerelle ", "Place ", "Plaine ",
+            "Plateau ", "Promenade ", "Parvis ", "Quartier ", "Quai ", "Résidence ", "Ruelle ", "Rocade ", "Rond-Point ", "Route ",
+            "Rue ", "Sentier ", "Square ", "Terre-Plein ", "Terrasse ", "Traverse ", "Villa ", "Village ");
 
+    //Use for the animation of the reglage
     private ConstraintLayout layout;
+
+    //Variable for knowing the state of the reglage layout
     private boolean reglage = false;
 
+    //Variables for change simply the number of street scan
     private int pas=2;
     private int oldPas = pas;
     private int surface=1;
 
-    private int oldValue;
+    //Variable for save the old state of the seekBar
+    private int oldSeekBarState;
 
+    //SharedPreferences use for save and get data of cache
     private SharedPreferences sharedPreferences;
 
+    //Use for create a link with the MainActivity view
     private MainActivity view;
 
+    //Variable use for deserialize list
     private Gson gson;
 
+    //Constructor
     public MainController(MainActivity mainActivity, Gson gson,SharedPreferences sharedPreferences) {
         this.view = mainActivity;
         this.gson = gson;
         this.sharedPreferences = sharedPreferences;
     }
 
+    //Method call in the OnCreate method of the MainActivity
     public void onStart(){
 
         layout = view.layout;
 
+        //Initialise the reglage button and set a listener
         reglageButtonInitialiser(view.reglageButton);
 
-        oldValue=1;
+        oldSeekBarState =1;
 
+        //Initialise the seekBar and set a listener
         seekBarInitialiser(view.seekBar);
 
+        //Initialise thing for call gps
         getGPSlocation = false;
-
         locationManager = (LocationManager) view.getSystemService(Context.LOCATION_SERVICE);
 
         //A way to resolve a little bug
@@ -112,11 +130,14 @@ public class MainController {
             e.printStackTrace();
         }
 
+        //Manage if there is an internet connexion (if yes call API, else get data from cache and if there isn't data show a Toast)
         launch((ConnectivityManager) Objects.requireNonNull(view.getSystemService(Context.CONNECTIVITY_SERVICE)));
 
+        //Initialise the swipe and set a listener for refresh the list when the user swipe to the top when he is in the top
         swipeContainerInitialiser(view.swipeContainer);
     }
 
+    //Initialise the reglage button and set a listener
     private void reglageButtonInitialiser(ImageButton reglageButton){
         reglageButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -135,6 +156,7 @@ public class MainController {
         });
     }
 
+    //Initialise the seekBar and set a listener
     private void seekBarInitialiser(SeekBar seekBar){
         seekBar.setProgress(0);
         seekBar.incrementProgressBy(1);
@@ -186,17 +208,18 @@ public class MainController {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                if(oldValue<seekBar.getProgress()){
+                if(oldSeekBarState <seekBar.getProgress()){
                     if(infoRues.size()!=20 || oldPas>pas){
                         refresh();
                     }
-                    oldValue=seekBar.getProgress();
+                    oldSeekBarState =seekBar.getProgress();
                 }
 
             }
         });
     }
 
+    //Manage if there is an internet connexion (if yes call API, else get data from cache and if there isn't data show a Toast)
     private void launch(ConnectivityManager connectivityManager){
         assert connectivityManager != null;
         if(Objects.requireNonNull(connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE)).getState() == NetworkInfo.State.CONNECTED ||
@@ -208,6 +231,7 @@ public class MainController {
         }else{
             //There isn't a connexion
 
+            //Get the list from the cache when there aren't connexion (not accurate location indeed)
             infoRues = getDataFromCache();
 
             if(infoRues != null){
@@ -219,13 +243,15 @@ public class MainController {
         }
     }
 
+    //Initialise the swipe and set a listener for refresh the list when the user swipe to the top when he is in the top
     private void swipeContainerInitialiser(SwipeRefreshLayout swipeContainer){
         // Setup refresh listener which triggers new data loading
         swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
+                //Refresh the list with new data
                 refresh();
-                oldValue=view.seekBar.getProgress();
+                oldSeekBarState =view.seekBar.getProgress();
             }
         });
         // Configure the refreshing colors
@@ -235,6 +261,7 @@ public class MainController {
                 android.R.color.holo_red_light);
     }
 
+    //Refresh the list with new data
     private void refresh() {
 
         getGPSlocation = false;
@@ -245,6 +272,7 @@ public class MainController {
 
     }
 
+    //Save the list in the cache when it is loaded
     private void saveList(List<Rue> rueList) {
 
         String jsonListRue = gson.toJson(rueList);
@@ -256,6 +284,7 @@ public class MainController {
 
     }
 
+    //Get the list from the cache when there aren't connexion (not accurate location indeed)
     private List<Rue> getDataFromCache() {
         String jsonListRue = sharedPreferences.getString("saveListRue", null);
 
@@ -267,6 +296,7 @@ public class MainController {
         }
     }
 
+    //Make the API call to do a search about a title in wikipedia
     private void makeAPICallSearch(String search){
         Call<RestWikipediaResponseSearch> call = Singletons.getWikipediaApiSearch().getWikipediaResponseSearch("query", "1", "classic","snippet", "search", search, "", "json");
         try{
@@ -276,6 +306,7 @@ public class MainController {
         }
     }
 
+    //Make the API call to get information about a wikipedia page
     private void makeAPICallInfo(String search){
 
         Call<RestWikipediaResponseInfo> call = Singletons.getWikipediaApiInfo().getWikipediaResponseInfo("query", "extracts", "1", search, "1", "2", "json");
@@ -286,11 +317,13 @@ public class MainController {
         }
     }
 
+    //Make the API call to get the image of a wikipedia page
     private void makeAPICallImage(String search){
 
         Call<String> call = Singletons.getWikipediaApiImage().getWikipediaResponseImage("query", search, "json", "pageimages");
         try{
             url = call.execute().body();
+            //Format a String with an url to 2 url (one for the thumbnail and the other for the real picture)
             createUrl();
 
         }catch(IOException e){
@@ -298,6 +331,7 @@ public class MainController {
         }
     }
 
+    //Format a String with an url to 2 url (one for the thumbnail and the other for the real picture)
     private void createUrl(){
         assert url != null;
         if(url.contains("https://upload.wikimedia.org")) {
@@ -321,10 +355,12 @@ public class MainController {
         }
     }
 
+    //Make the API call to collect the adresse and other street things with a gps location
     private void makeBingAPICall(String latitudeVar, String longitudeVar, Integer weight){
 
         Call<String> call = Singletons.getBingMapsApi().getBingMapsResponse("http://dev.virtualearth.net/REST/v1/Locations/" + latitudeVar + "," +  longitudeVar + "?o=json&incl=ciso2&key=AsKDhGrY05ocf_6ajFmtLjPfnPI1MxXFALXyVw9kRNrsDlSmEygCllcwizQbnUuS");
         try{
+            //Format a string the collect just the name of the street (without the "rue" or the "allée" for example)
             createListNomRue(Objects.requireNonNull(call.execute().body()), weight);
 
         }catch(IOException e){
@@ -332,6 +368,7 @@ public class MainController {
         }
     }
 
+    //Format a string the collect just the name of the street (without the "rue" or the "allée" for example)
     private void createListNomRue(String response,Integer weight){
         assert response != null;
         if(response.contains("baseStreet")){
@@ -366,15 +403,18 @@ public class MainController {
         }
     }
 
+    //Have a list of things and collect all information with the Wikipedia API
     private void createListRue(List<String> nomsRue){
 
         infoRues.clear();
 
         for(int i=0; i<nomsRue.size(); i++){
+            //Collect all the data for a street name
             ajoutOneRue(i, nomsRue);
         }
     }
 
+    //Collect all the data for a street name
     private void ajoutOneRue(int i, List<String> nomsRue){
         Rue newRue = new Rue();
 
@@ -425,6 +465,7 @@ public class MainController {
         infoRues.add(newRue);
     }
 
+    //Main thing that manage all component
     private void chargement(){
         if(!getGPSlocation){
             getGPSlocation = true;
@@ -448,6 +489,7 @@ public class MainController {
         }
     }
 
+    //Method that get the location of the user and, depending of the setting of the user, collect a list of street name
     private void collectBingApi(){
 
         listNomRue.clear();
@@ -458,8 +500,10 @@ public class MainController {
         double latDist = 0.00045*pas;//50m * le pas
         double longDist = 0.00075*pas;//50m * le pas
 
+        //Small method that wait that the location have been getting
         waitLocationListener();
 
+        //Format gps coordinate to prevent a bug
         formatGPSLocation();
 
         Lat -= distanceMax * latDist;
@@ -481,9 +525,13 @@ public class MainController {
             }
         }
 
+        Lat=null;
+        Long=null;
+
         listNomRue.putAll(hashNomRue);
     }
 
+    //Small method that wait that the location have been getting
     private void waitLocationListener(){
         //A way to wait the GPS Location and not do the Bing API call without location
         while (Lat==null && Long==null){
@@ -495,6 +543,7 @@ public class MainController {
         }
     }
 
+    //Format gps coordinate to prevent a bug
     private void formatGPSLocation(){
         assert Lat != null;
         if(Lat.toString().length()-Lat.toString().indexOf(".")+1<5){
@@ -509,6 +558,7 @@ public class MainController {
         Long = Double.parseDouble(Long.toString().substring(0,Long.toString().indexOf(".")+6));
     }
 
+    //Private class that permit to do Asynchronous task (use for the waiting with the progress bar)
     @SuppressLint("StaticFieldLeak")
     public class Chargement extends AsyncTask<Void, Void, Void> implements LocationListener {
 
@@ -541,6 +591,7 @@ public class MainController {
             view.progressBarHolder.setAnimation(outAnimation);
             view.progressBarHolder.setVisibility(View.GONE);
 
+            //Save the list in the cache when it is loaded
             saveList(infoRues);
             view.showList(infoRues);
 
