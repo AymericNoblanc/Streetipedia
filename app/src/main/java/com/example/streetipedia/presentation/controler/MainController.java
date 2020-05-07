@@ -106,6 +106,13 @@ public class MainController {
 
         locationManager = (LocationManager) view.getSystemService(Context.LOCATION_SERVICE);
 
+        //A way to resolve a little bug
+        try {
+            TimeUnit.MILLISECONDS.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         launch((ConnectivityManager) Objects.requireNonNull(view.getSystemService(Context.CONNECTIVITY_SERVICE)));
 
         swipeContainerInitialiser(view.swipeContainer);
