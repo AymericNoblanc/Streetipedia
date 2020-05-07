@@ -4,4 +4,9 @@
     <string name="ouvrir_la_page_wikipedia">Ouvrir la page Wikipédia</string>
     <string name="description">Description</string>
     <string name="example_application">Example application</string>
+    <string name="button_reglage">button réglage</string>
+    <string name="surface_100x100">Surface : 100x100</string>
+    <string name="pas_100m">Pas : 100m</string>
+    <string name="quantit">Quantité</string>
+    <string name="rapidit">Rapidité</string>
 </resources>
