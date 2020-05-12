@@ -3,10 +3,7 @@ package com.example.streetipedia;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.example.streetipedia.data.BingMapsApi;
-import com.example.streetipedia.data.WikipediaApiImage;
-import com.example.streetipedia.data.WikipediaApiInfo;
-import com.example.streetipedia.data.WikipediaApiSearch;
+import com.example.streetipedia.data.ApisCall;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -19,10 +16,10 @@ public class Singletons {
 
     private static Gson gsonInstance;
     private static SharedPreferences sharedPreferencesInstance;
-    private static BingMapsApi bingMapsApiInstance;
-    private static WikipediaApiImage wikipediaApiImageInstance;
-    private static WikipediaApiInfo wikipediaApiInfoInstance;
-    private static WikipediaApiSearch wikipediaApiSearchInstance;
+    private static ApisCall bingMapsApiInstance;
+    private static ApisCall wikipediaApiImageInstance;
+    private static ApisCall wikipediaApiInfoInstance;
+    private static ApisCall wikipediaApiSearchInstance;
 
     //Gson Singleton
     public static Gson getGson(){
@@ -43,7 +40,7 @@ public class Singletons {
     }
 
     //BingMapsApi Singleton
-    public static BingMapsApi getBingMapsApi(){
+    public static ApisCall getBingMapsApi(){
         if(bingMapsApiInstance==null){
             Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(Constants.BASE_BING_URL)
@@ -51,14 +48,14 @@ public class Singletons {
                     .addConverterFactory(GsonConverterFactory.create(getGson()))
                     .build();
 
-            bingMapsApiInstance = retrofit.create(BingMapsApi.class);
+            bingMapsApiInstance = retrofit.create(ApisCall.class);
         }
 
         return bingMapsApiInstance;
     }
 
     //WikipediaApiImage Singleton
-    public static WikipediaApiImage getWikipediaApiImage(){
+    public static ApisCall getWikipediaApiImage(){
         if(wikipediaApiImageInstance==null){
             Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(Constants.BASE_WIKIPEDIA_URL)
@@ -66,14 +63,14 @@ public class Singletons {
                     .addConverterFactory(GsonConverterFactory.create(getGson()))
                     .build();
 
-            wikipediaApiImageInstance = retrofit.create(WikipediaApiImage.class);
+            wikipediaApiImageInstance = retrofit.create(ApisCall.class);
         }
 
         return wikipediaApiImageInstance;
     }
 
     //WikipediaApiInfo Singleton
-    public static WikipediaApiInfo getWikipediaApiInfo(){
+    public static ApisCall getWikipediaApiInfo(){
         if(wikipediaApiInfoInstance==null){
             Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(Constants.BASE_WIKIPEDIA_URL)
@@ -81,14 +78,14 @@ public class Singletons {
                     .addConverterFactory(GsonConverterFactory.create(getGson()))
                     .build();
 
-            wikipediaApiInfoInstance = retrofit.create(WikipediaApiInfo.class);
+            wikipediaApiInfoInstance = retrofit.create(ApisCall.class);
         }
 
         return wikipediaApiInfoInstance;
     }
 
     //WikipediaApiSearch Singleton
-    public static WikipediaApiSearch getWikipediaApiSearch(){
+    public static ApisCall getWikipediaApiSearch(){
         if(wikipediaApiSearchInstance==null){
             Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(Constants.BASE_WIKIPEDIA_URL)
@@ -96,7 +93,7 @@ public class Singletons {
                     .addConverterFactory(GsonConverterFactory.create(getGson()))
                     .build();
 
-            wikipediaApiSearchInstance = retrofit.create(WikipediaApiSearch.class);
+            wikipediaApiSearchInstance = retrofit.create(ApisCall.class);
         }
 
         return wikipediaApiSearchInstance;
