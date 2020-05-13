@@ -43,6 +43,8 @@ Elle a été développée avec l'utilisation du [pattern MVC](https://en.wikiped
 - **Animation** de ce menu
 - Gestion de **tâche asynchrone** pour l'affichage d'un **overlay de chargement**
 - **Affichage d'images** via la librarie **[Picasso](https://square.github.io/picasso/)**
+- **Création** d'une **icône personalisé** via **Gimp**
+<img src="ImagesReadme/Ecran_without_reglage.png" width=250>
 
 ## Fonctionnalités :
 
@@ -52,7 +54,7 @@ Elle a été développée avec l'utilisation du [pattern MVC](https://en.wikiped
 
 La **rue actuelle** est affichée avec un **fond couleur or** (voir la section **Problèmes**) 
 
-<img src="ImagesReadme/Ecran_without_reglage.png" width=250>
+<img src="app/src/main/res/mipmap-xxxhdpi/ic_app_logo.png" width=250>
 
 #### Menu réglage
 
